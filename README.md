@@ -1,6 +1,6 @@
 # DSC200_Final_Project
 
-##Overview
+## Overview
 
 
 This document describes the requirements for the final project for the Fall 2023 DSC 200 Data
@@ -39,7 +39,7 @@ application for collecting and preprocessing (cleaning, preparing, etc.) the dat
 analytics work.
 
 
-##Project 1
+## Project 1
 
 
 Project 1 relates to the collection of production flaws, etc. that may be observed from three

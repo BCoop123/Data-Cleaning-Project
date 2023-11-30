@@ -20,6 +20,7 @@ import pandas as pd
 # define functions
 #========================================================================
 
+# Get the data contained in all of the CSV files used for this project
 def getData():
     # Get CSV data
     pTechCoilsData = pd.read_csv('../../Datasets/AP4_PTec_Coils.csv')
@@ -40,6 +41,22 @@ def getData():
         flInspectionData
     ]
 
-list = getData()
+# Clean data that is stored in a dataframe
+def cleanData(dataframe):
+    df = "" #TODO
 
-print(list[0].head())
+    return df
+
+# Merge two datasets given the names, joinCondition, and joinType
+def mergeDatasets(dataset1, dataset2, joinCondition, joinType):
+    df = pd.merge({}, {}, on='{}', how='{}').format(dataset1, dataset2, joinCondition, joinType)
+
+    return df
+
+#========================================================================
+# main program
+#========================================================================
+
+dataframeList = getData()
+
+print(dataframeList[0].head())

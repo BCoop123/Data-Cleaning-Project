@@ -23,13 +23,13 @@ import pandas as pd
 # Get the data contained in all of the CSV files used for this project
 def getData():
     # Get CSV data
-    pTechCoilsData = pd.read_csv('../../Datasets/AP4_PTec_Coils.csv')
-    pTechDefectMapsData = pd.read_csv('../../Datasets/AP4_Ptec_Defect_Maps_10-coils.csv')
-    claimsData = pd.read_csv('../../Datasets/claims_2023-05.csv')
-    flInspectionCommentsData = pd.read_csv('../../Datasets/FLInspectionComments.csv')
-    flInspectionMappedDefectsData = pd.read_csv('../../Datasets/tblFlatInspectionMappedDefects.csv')
-    flInspectionProcessesData = pd.read_csv('../../Datasets/tblFlatInspectionProcesses.csv')
-    flInspectionData = pd.read_csv('../../Datasets/tblFLInspection.csv')
+    pTechCoilsData = pd.read_csv('./Datasets/AP4_PTec_Coils.csv')
+    pTechDefectMapsData = pd.read_csv('./Datasets/AP4_Ptec_Defect_Maps_10-coils.csv')
+    claimsData = pd.read_csv('./Datasets/claims_2023-05.csv')
+    flInspectionCommentsData = pd.read_csv('./Datasets/FLInspectionComments.csv')
+    flInspectionMappedDefectsData = pd.read_csv('./Datasets/tblFlatInspectionMappedDefects.csv')
+    flInspectionProcessesData = pd.read_csv('./Datasets/tblFlatInspectionProcesses.csv')
+    flInspectionData = pd.read_csv('./Datasets/tblFLInspection.csv')
 
     return [
         pTechCoilsData,

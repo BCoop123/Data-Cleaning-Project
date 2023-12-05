@@ -17,6 +17,7 @@
 import pandas as pd
 import os
 import configparser as cp
+import sqlite3
 
 #========================================================================
 # define functions
@@ -88,6 +89,12 @@ def mergeDatasets(dataset1, dataset2, joinCondition, joinType):
         return df
     except:
         print("Failed to merge datasets.")
+
+def exportData():
+    try:
+        con = sqlite3.connect(url + "/" + dbuser + "/" + dbpassword)
+    except:
+        print("Failed to connect to database.")
 
 #========================================================================
 # main program

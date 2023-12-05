@@ -28,20 +28,25 @@ url = ""
 dbuser = ""
 dbpassword = ""
 
+#check if datasets file exit
 if not os.path.exists('./Datasets'):
     flag = False
     print("Need to create a folder named Datasets.")
 
+#check if db.conf file exit
 if not os.path.exists('./db.conf'):
     flag = False
     print("Need to create a file name db.conf with credentials.")
 else:
+
     try:
+        # creat an instance of the parser
         confP = cp.ConfigParser()
 
         # read in the ini or configuration file
         confP.read(["db.conf"])
 
+        # Access the configuration variables
         url = confP.get("db", "url")
         dbuser = confP.get("db", "dbuser")
         dbpassword = confP.get("db", "dbpassword")

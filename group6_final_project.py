@@ -17,7 +17,8 @@
 import pandas as pd
 import os
 import configparser as cp
-import sqlite3
+#import sqlite3
+import psycopg2
 
 #========================================================================
 # define functions
@@ -25,9 +26,15 @@ import sqlite3
 
 # Check if Datasets folder exists before running
 flag = True
-url = ""
-dbuser = ""
-dbpassword = ""
+
+# Initilize database credentials
+credentials = []
+
+host = ""
+database = ""
+port = ""
+user = ""
+password = ""
 
 if not os.path.exists('./Datasets'):
     flag = False
@@ -43,10 +50,13 @@ else:
         # read in the ini or configuration file
         confP.read(["db.conf"])
 
-        url = confP.get("db", "url")
-        dbuser = confP.get("db", "dbuser")
-        dbpassword = confP.get("db", "dbpassword")
+        host = confP.get("db", "url")
+        database = confP.get("db", "database")
+        port = confP.get("db", "port")
+        user = confP.get("db", "dbuser")
+        password = confP.get("db", "dbpassword")
         
+        credentials = [host, database, port, user, password]
 
     except:
         flag = False
@@ -90,11 +100,40 @@ def mergeDatasets(dataset1, dataset2, joinCondition, joinType):
     except:
         print("Failed to merge datasets.")
 
-def exportData():
+def dbConnect(credentials):
     try:
-        con = sqlite3.connect(url + "/" + dbuser + "/" + dbpassword)
+        connection = psycopg2.connect(
+            host=credentials[0],
+            database=credentials[1],
+            port=credentials[2],
+            user=credentials[3],
+            password=credentials[4]
+        )
+
+        return connection
+        
     except:
         print("Failed to connect to database.")
+
+def testConnection(connection):
+    try:
+        # Create a cursor object to interact with the database
+        cursor = connection.cursor()
+
+        # Create a table
+        cursor.execute('CREATE TABLE IF NOT EXISTS defectsTest (defectID int PRIMARY KEY, name varchar(30))')
+
+        cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+        result = cursor.fetchall()
+        print(result)
+
+        # Close the connection
+        connection.close()
+
+        print("Success")
+
+    except:
+        print("Failure")
 
 #========================================================================
 # main program
@@ -105,4 +144,8 @@ if flag:
     dataframeList = getData()
     
     print(dataframeList[0].head())
-    print(url)
+    
+    # Test connecting to the database
+    print(credentials)
+    connection = dbConnect(credentials)
+    testConnection(connection)

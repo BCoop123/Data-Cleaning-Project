@@ -135,6 +135,31 @@ def testConnection(connection):
     except:
         print("Failure")
 
+def cleanPTechCoilsData(df):
+        # Print observations before
+        print(df.shape)
+
+        # Remove duplicate columns
+        df.drop(['Charge'], axis=1, inplace=True)
+
+        # Fix capitilization issues
+        df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
+
+        # Remove duplicate rows
+        df.drop_duplicates(inplace=True)
+
+        #print(df['BdeCoilId'].head(74))
+
+        # Drop records where length, width, thickness, or weight are 0. This is not possible.
+        df = df[df["Length"] != 0]
+        df = df[df["Width"] != 0]
+        df = df[df["Thickness"] != 0]
+        df = df[df["Weight"] != 0]
+
+        # Print observations after
+        print(df.shape)
+
+
 #========================================================================
 # main program
 #========================================================================
@@ -143,9 +168,11 @@ if flag:
 
     dataframeList = getData()
     
-    print(dataframeList[0].head())
+    #print(dataframeList[0].head())
     
     # Test connecting to the database
-    print(credentials)
-    connection = dbConnect(credentials)
-    testConnection(connection)
+    #print(credentials)
+    #connection = dbConnect(credentials)
+    #testConnection(connection)
+
+    cleanDataset = cleanPTechCoilsData(dataframeList[0])

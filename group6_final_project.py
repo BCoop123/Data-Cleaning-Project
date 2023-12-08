@@ -143,6 +143,9 @@ def cleanPTechCoilsData(df):
         # Print observations before
         print(df.shape)
 
+        # detect if both are empty, null, or NAN.
+        df = df[df["CoilId"] != df["BdeCoilId"]]
+
         # Remove duplicate columns
         df.drop(['Charge'], axis=1, inplace=True)
 
@@ -152,7 +155,6 @@ def cleanPTechCoilsData(df):
         # Remove duplicate rows
         df.drop_duplicates(inplace=True)
 
-        #print(df['BdeCoilId'].head(74))
 
         # Drop records where length, width, thickness, or weight are 0. This is not possible.
         df = df[df["Length"] != 0]
@@ -162,6 +164,48 @@ def cleanPTechCoilsData(df):
 
         # Print observations after
         print(df.shape)
+
+
+def cleanDefectMapsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # empty, null
+    df = df[df["CoilId"] != '']
+    df = df[df["CoilId"] != None]
+    df = df[df["DefectId"] != '']
+    df = df[df["DefectId"] != None]
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+
+    df = df[df["PeriodLength"] != 0]
+    df = df[df["SizeCD"] != 0]
+    df = df[df["SizeMD"] != 0]
+
+    # Print observations after
+    print(df.shape)
+
+def cleanClaimsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # empty, null
+    df = df[df["ProductIdentification1"] != '']
+    df = df[df["ProductIdentification1"] != None]
+    df = df[df["ClaimNumber"] != '']
+    df = df[df["ClaimNumber"] != None]
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+    df = df[df["TotalWeightClaimed"] != 0]
+    df = df[df["CustomerClaimDefectWeight"] != 0]
+    df = df[df["NASIdentifiedDefectWeight"] != 0]
+    df = df[df["AreaofResponsibilityDefectWeigh"] != 0]
+
+    # Print observations after
+    print(df.shape)
 
 
 #========================================================================
@@ -180,3 +224,4 @@ if flag:
     #testConnection(connection)
 
     cleanDataset = cleanPTechCoilsData(dataframeList[0])
+    cleanClaimsData(dataframeList[2])

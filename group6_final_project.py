@@ -97,9 +97,15 @@ def cleanData(dataframe):
     return df
 
 # Merge two datasets given the names, joinCondition, and joinType
-def mergeDatasets(dataset1, dataset2, joinCondition, joinType):
+def mergeDatasets(dataframeList):
     try:
-        df = pd.merge({}, {}, on='{}', how='{}').format(dataset1, dataset2, joinCondition, joinType)
+        df = pd.merge(dataframeList[0], dataframeList[1], on='CoilId', how='right')
+
+        # pTechCoilsData cannot be joined with claimsData there are no claims associated with any of the coils
+        # we were given and no claims associated with any of the defects given 
+        #df = pd.merge(df, dataframeList[2], left_on='BdeCoilId', right_on='ProductIdentification1', how='left')
+        
+        df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
         return df
     except:
         print("Failed to merge datasets.")
@@ -140,30 +146,30 @@ def testConnection(connection):
         print("Failure")
 
 def cleanPTechCoilsData(df):
-        # Print observations before
-        print(df.shape)
+    # Print observations before
+    print(df.shape)
 
-        # detect if both are empty, null, or NAN.
-        df = df[df["CoilId"] != df["BdeCoilId"]]
+    # detect if both are empty, null, or NAN.
+    df = df[df["CoilId"] != df["BdeCoilId"]]
 
-        # Remove duplicate columns
-        df.drop(['Charge'], axis=1, inplace=True)
+    # Remove Charge column since it is always empty
+    df.drop(['Charge'], axis=1, inplace=True)
 
-        # Fix capitilization issues
-        df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
+    # Fix capitilization issues
+    df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
 
-        # Remove duplicate rows
-        df.drop_duplicates(inplace=True)
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
 
-        # Drop records where length, width, thickness, or weight are 0. This is not possible.
-        df = df[df["Length"] != 0]
-        df = df[df["Width"] != 0]
-        df = df[df["Thickness"] != 0]
-        df = df[df["Weight"] != 0]
+    # Drop records where length, width, thickness, or weight are <= 0. This is not possible.
+    df = df[df["Length"] > 0]
+    df = df[df["Width"] > 0]
+    df = df[df["Thickness"] > 0]
+    df = df[df["Weight"] > 0]
 
-        # Print observations after
-        print(df.shape)
+    # Print observations after
+    print(df.shape)
 
 
 def cleanDefectMapsData(df):
@@ -175,13 +181,14 @@ def cleanDefectMapsData(df):
     df = df[df["CoilId"] != None]
     df = df[df["DefectId"] != '']
     df = df[df["DefectId"] != None]
+
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
 
-    df = df[df["PeriodLength"] != 0]
-    df = df[df["SizeCD"] != 0]
-    df = df[df["SizeMD"] != 0]
+    df = df[df["PeriodLength"] > 0]
+    df = df[df["SizeCD"] > 0]
+    df = df[df["SizeMD"] > 0]
 
     # Print observations after
     print(df.shape)
@@ -199,10 +206,10 @@ def cleanClaimsData(df):
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
-    df = df[df["TotalWeightClaimed"] != 0]
-    df = df[df["CustomerClaimDefectWeight"] != 0]
-    df = df[df["NASIdentifiedDefectWeight"] != 0]
-    df = df[df["AreaofResponsibilityDefectWeigh"] != 0]
+    df = df[df["TotalWeightClaimed"] > 0]
+    df = df[df["CustomerClaimDefectWeight"] > 0]
+    df = df[df["NASIdentifiedDefectWeight"] > 0]
+    df = df[df["AreaofResponsibilityDefectWeigh"] > 0]
 
     # Print observations after
     print(df.shape)
@@ -211,10 +218,55 @@ def cleanFlInspectionCommentsData(df):
     pass
 
 def cleanFlInspectionMappedDefectsData(df):
-    pass
+    # Print observations before
+    print(df.shape)
+
+    # Remove this column the defect count is always 1
+    df.drop(['DefectCount'], axis=1, inplace=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
+    df = df.loc[df["Length"] > 0]
+
+    # Print observations after
+    print(df.shape)
 
 def cleanFlInspectionProcessesData(df):
-    pass
+    # Print observations before
+    print(df.shape)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+    # Remove these columns they contain the same value for every record
+    values = [
+    "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
+    "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
+    "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
+    "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
+    "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
+    "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
+    "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
+    "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
+    "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
+    "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
+    "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
+    "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
+    "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
+    "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
+    "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
+    "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
+    "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
+    "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
+    ]
+
+    for value in values:
+        df.drop([value], axis=1, inplace=True)
+
+    # Print observations after
+    print(df.shape)
 
 def cleanFlInspectionData(df):
     pass
@@ -226,6 +278,7 @@ def cleanFlInspectionData(df):
 if flag:
 
     dataframeList = getData()
+    mergeDatasets(dataframeList)
     
     #print(dataframeList[0].head())
     
@@ -234,5 +287,8 @@ if flag:
     #connection = dbConnect(credentials)
     #testConnection(connection)
 
-    cleanDataset = cleanPTechCoilsData(dataframeList[0])
-    cleanClaimsData(dataframeList[2])
+    #cleanPTechCoilsData(dataframeList[0])
+    #cleanDefectMapsData(dataframeList[1])
+    #cleanClaimsData(dataframeList[2])
+    #cleanFlInspectionMappedDefectsData(dataframeList[4])
+    #cleanFlInspectionProcessesData(dataframeList[5])

@@ -90,11 +90,19 @@ def getData():
     except:
         print("Failed to read files.")
 
-# Clean data that is stored in a dataframe
-def cleanData(dataframe):
-    df = "" #TODO
+# Runs the individual cleansing functions for all of the datasets
+def cleanData(dataframeList):
+    cleanedDataframeList = []
+    
+    cleanedDataframeList.append(cleanPTechCoilsData(dataframeList[0]))
+    cleanedDataframeList.append(cleanDefectMapsData(dataframeList[1]))
+    cleanedDataframeList.append(cleanClaimsData(dataframeList[2]))
+    cleanedDataframeList.append(cleanFlInspectionCommentsData(dataframeList[3]))
+    cleanedDataframeList.append(cleanFlInspectionMappedDefectsData(dataframeList[4]))
+    cleanedDataframeList.append(cleanFlInspectionProcessesData(dataframeList[5]))
+    cleanedDataframeList.append(cleanFlInspectionData(dataframeList[6]))
 
-    return df
+    return dataframeList
 
 # Merge two datasets given the names, joinCondition, and joinType
 def mergeDatasets(dataframeList):
@@ -193,6 +201,8 @@ def cleanDefectMapsData(df):
     # Print observations after
     print(df.shape)
 
+    return df
+
 def cleanClaimsData(df):
     # Print observations before
     print(df.shape)
@@ -214,9 +224,12 @@ def cleanClaimsData(df):
     # Print observations after
     print(df.shape)
 
-def cleanFlInspectionCommentsData(df):
+    return df
 
+def cleanFlInspectionCommentsData(df):
     # Drop the 'isActive' column as all the value is 1 in the dataset ??
+
+    return df
 
 
 
@@ -235,6 +248,8 @@ def cleanFlInspectionMappedDefectsData(df):
 
     # Print observations after
     print(df.shape)
+
+    return df
 
 def cleanFlInspectionProcessesData(df):
     # Print observations before
@@ -271,7 +286,12 @@ def cleanFlInspectionProcessesData(df):
     # Print observations after
     print(df.shape)
 
+    return df
+
 def cleanFlInspectionData(df):
+    # Print observations before
+    print(df.shape)
+
     # a lot of duplicates data in this datasets (More than 50% data are duplicates)
     # drop the duplications
     df = df.drop_duplicates()
@@ -281,7 +301,10 @@ def cleanFlInspectionData(df):
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
+    # Print observations after
+    print(df.shape)
 
+    return df
 
 #========================================================================
 # main program
@@ -290,7 +313,7 @@ def cleanFlInspectionData(df):
 if flag:
 
     dataframeList = getData()
-    mergeDatasets(dataframeList)
+    #mergeDatasets(dataframeList)
     
     #print(dataframeList[0].head())
     
@@ -302,5 +325,7 @@ if flag:
     #cleanPTechCoilsData(dataframeList[0])
     #cleanDefectMapsData(dataframeList[1])
     #cleanClaimsData(dataframeList[2])
+    #cleanFlInspectionCommentsData([3])
     #cleanFlInspectionMappedDefectsData(dataframeList[4])
     #cleanFlInspectionProcessesData(dataframeList[5])
+    cleanData(dataframeList)

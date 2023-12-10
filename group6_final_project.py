@@ -208,7 +208,10 @@ def cleanClaimsData(df):
     print(df.shape)
 
 def cleanFlInspectionCommentsData(df):
-    pass
+
+    # Drop the 'isActive' column as all the value is 1 in the dataset ??
+
+
 
 def cleanFlInspectionMappedDefectsData(df):
     pass
@@ -217,7 +220,16 @@ def cleanFlInspectionProcessesData(df):
     pass
 
 def cleanFlInspectionData(df):
-    pass
+    # a lot of duplicates data in this datasets (More than 50% data are duplicates)
+    # drop the duplications
+    df = df.drop_duplicates()
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+
 
 #========================================================================
 # main program

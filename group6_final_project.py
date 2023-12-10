@@ -207,6 +207,17 @@ def cleanClaimsData(df):
     # Print observations after
     print(df.shape)
 
+def cleanFlInspectionCommentsData(df):
+    pass
+
+def cleanFlInspectionMappedDefectsData(df):
+    pass
+
+def cleanFlInspectionProcessesData(df):
+    pass
+
+def cleanFlInspectionData(df):
+    pass
 
 #========================================================================
 # main program

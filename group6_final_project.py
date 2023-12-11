@@ -107,6 +107,7 @@ def cleanData(dataframeList):
 # Merge two datasets given the names, joinCondition, and joinType
 def mergeDatasets(dataframeList):
     try:
+        # Join PTechCoilsData and DefectMapsData
         df = pd.merge(dataframeList[0], dataframeList[1], on='CoilId', how='right')
 
         # pTechCoilsData cannot be joined with claimsData there are no claims associated with any of the coils
@@ -114,6 +115,12 @@ def mergeDatasets(dataframeList):
         #df = pd.merge(df, dataframeList[2], left_on='BdeCoilId', right_on='ProductIdentification1', how='left')
         
         df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
+
+        # Join FlInspectionData and FlInspectionProcessesData
+        df2 = pd.merge(dataframeList[6], dataframeList[5], left_on='FLInspectionID', right_on='InspectionProcessID', how='left')
+
+        df2.to_csv('./Datasets/mergedInspectionData.csv', index=False)
+
         return df
     except:
         print("Failed to merge datasets.")
@@ -161,7 +168,12 @@ def cleanPTechCoilsData(df):
     df = df[df["CoilId"] != df["BdeCoilId"]]
 
     # Remove Charge column since it is always empty
-    df.drop(['Charge'], axis=1, inplace=True)
+    #df.drop(['Charge'], axis=1, inplace=True)
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
 
     # Fix capitilization issues
     df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
@@ -258,30 +270,35 @@ def cleanFlInspectionProcessesData(df):
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
-    # Remove these columns they contain the same value for every record
-    values = [
-    "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
-    "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
-    "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
-    "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
-    "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
-    "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
-    "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
-    "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
-    "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
-    "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
-    "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
-    "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
-    "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
-    "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
-    "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
-    "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
-    "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
-    "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
-    ]
+    # # Remove these columns they contain the same value for every record
+    # values = [
+    # "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
+    # "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
+    # "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
+    # "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
+    # "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
+    # "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
+    # "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
+    # "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
+    # "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
+    # "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
+    # "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
+    # "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
+    # "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
+    # "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
+    # "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
+    # "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
+    # "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
+    # "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
+    # ]
 
-    for value in values:
-        df.drop([value], axis=1, inplace=True)
+    # for value in values:
+    #     df.drop([value], axis=1, inplace=True)
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
 
     # Print observations after
     print(df.shape)

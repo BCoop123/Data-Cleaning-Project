@@ -270,35 +270,35 @@ def cleanFlInspectionProcessesData(df):
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
-    # # Remove these columns they contain the same value for every record
-    # values = [
-    # "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
-    # "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
-    # "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
-    # "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
-    # "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
-    # "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
-    # "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
-    # "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
-    # "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
-    # "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
-    # "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
-    # "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
-    # "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
-    # "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
-    # "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
-    # "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
-    # "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
-    # "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
-    # ]
+    # Remove these columns they contain the same value for every record
+    values = [
+    "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
+    "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
+    "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
+    "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
+    "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
+    "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
+    "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
+    "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
+    "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
+    "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
+    "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
+    "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
+    "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
+    "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
+    "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
+    "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
+    "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
+    "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
+    ]
 
-    # for value in values:
-    #     df.drop([value], axis=1, inplace=True)
+    for value in values:
+        df.drop([value], axis=1, inplace=True)
 
-    #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
+    # #check if the columns has null or same values in the entire row
+    # columns_to_drop = df.columns[df.nunique() == 1]
+    # #drop those columns that has null or same values in the entire row
+    # df = df.drop(columns=columns_to_drop)
 
     # Print observations after
     print(df.shape)
@@ -345,4 +345,5 @@ if flag:
     #cleanFlInspectionCommentsData([3])
     #cleanFlInspectionMappedDefectsData(dataframeList[4])
     #cleanFlInspectionProcessesData(dataframeList[5])
-    cleanData(dataframeList)
+    cleanedDataframeList = cleanData(dataframeList)
+    mergeDatasets(cleanedDataframeList)

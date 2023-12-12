@@ -138,10 +138,17 @@ def cleanClaimsData(df):
     df = df[df["ClaimNumber"] != '']
     df = df[df["ClaimNumber"] != None]
 
+    # Columns that should not be less than or equal to 0
     df = df[df["TotalWeightClaimed"] > 0]
     df = df[df["CustomerClaimDefectWeight"] > 0]
-    df = df[df["NASIdentifiedDefectWeight"] > 0]
-    df = df[df["AreaofResponsibilityDefectWeigh"] > 0]
+    df = df[df["MaterialGaugeOrDiameter"] > 0]
+    df = df[df["MaterialWidthOrLegLength"] > 0]
+    df = df[df["MaterialLength"] > 0]
+    df = df[df["FormatMaxGaugeOrDiameter"] > 0]
+    df = df[df["FormatMaxWidthOrLegLength"] > 0]
+    df = df[df["FormatMaxWeight"] > 0]
+    df = df[df["TotalWeightClaimed"] > 0]
+    df = df[df["OriginalShippedWeight"] > 0]
 
     # check if the columns has null or same values in the entire row
     columns_to_drop = df.columns[df.nunique() == 1]
@@ -828,8 +835,8 @@ def exportInspectionData(connection, df):
 
     # Create a new dictionary with only matching key-value pairs
     mergedInspectionDataColumns = {key: value for key, value in mergedInspectionDataColumns.items() if key in df.columns}
-    print(mergedInspectionDataColumns)
-    print(list(df.columns))
+    #print(mergedInspectionDataColumns)
+    #print(list(df.columns))
 
     # Print the resulting dictionary
     #print(mergedinspectionDataColumns)

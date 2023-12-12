@@ -20,6 +20,10 @@ import configparser as cp
 #import sqlite3
 import psycopg2
 import re
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 #========================================================================
 # define functions
@@ -578,6 +582,49 @@ def cleanFlInspectionData(df):
     print(df.shape)
 
     return df
+
+## Use of tokenization, lammatixation and stopword
+def NLP():
+    # Download nltk resources (run only once)
+    nltk.download('punkt')
+    nltk.download('wordnet')
+    nltk.download('stopwords')
+
+    # Load the CSV file
+    file_path = 'FLInspectionComments.csv'
+    df = pd.read_csv(file_path)
+
+    # Check the structure of your DataFrame
+    print(df.head())
+
+    # Spell Check, Tokenization, Lemmatization, and Stopword Removal
+    lemmatizer = WordNetLemmatizer()
+    # spell = SpellChecker()
+    stop_words = set(stopwords.words('english'))
+
+    def process_text(text):
+        # Spell check
+        tokens = word_tokenize(str(text))
+        # corrected_tokens = [spell.correction(token) for token in tokens]
+        corrected_tokens = [token for token in tokens]
+
+        # Lemmatization with handling None type
+        lemmatized_tokens = [lemmatizer.lemmatize(token) if token is not None else '' for token in corrected_tokens]
+
+        # Remove stopwords
+        filtered_tokens = [token for token in lemmatized_tokens if token.lower() not in stop_words and token != '']
+
+        return ' '.join(filtered_tokens)
+
+    # Apply processing to the 'Comment' column
+    df['comments_processed'] = df['Comment'].apply(process_text)
+
+    # Save the DataFrame with the new column
+    output_file_path = 'FLInspectionComments_Processed.csv'
+    df[['FLInspectionCommentID', 'comments_processed']].to_csv(output_file_path, index=False)
+
+    # Check the updated DataFrame
+    print(df.head())
 
 #========================================================================
 # main program

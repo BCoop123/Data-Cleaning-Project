@@ -974,7 +974,12 @@ def detectErrors():
     #check if datasets file exit
     if not os.path.exists('./Datasets'):
         flag = False
-        print("Need to create a folder named Datasets.")
+        print("Need to create a folder for Datasets.")
+        
+
+    if not os.path.exists('./Datasets/cleanedDatasets'):
+        print("Created a folder for Cleaned Datasets.")
+        os.makedirs('./Datasets/cleanedDatasets')
 
     #check if db.conf file exit
     if not os.path.exists('./db.conf'):

@@ -79,6 +79,11 @@ def cleanPTechCoilsData(df):
     # Print observations after
     print(df.shape)
 
+
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleaned_PTechCoilsData.csv'
+    df.to_csv(clean_file_path, index=False)
+
     return df
 
 def cleanDefectMapsData(df):
@@ -116,6 +121,10 @@ def cleanDefectMapsData(df):
 
     # Print observations after
     print(df.shape)
+
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedDefectMapsData.csv'
+    df.to_csv(clean_file_path, index=False)
 
     return df
 
@@ -166,6 +175,10 @@ def cleanClaimsData(df):
     # Print observations after
     print(df.shape)
 
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedClaimsData.csv'
+    df.to_csv(clean_file_path, index=False)
+
     return df
 
 def cleanFlInspectionCommentsData(df):
@@ -201,6 +214,10 @@ def cleanFlInspectionCommentsData(df):
     # Print observations after
     print(df.shape)
 
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedFlInspectionCommentsData.csv'
+    df.to_csv(clean_file_path, index=False)
+
     return df
 
 def cleanFlInspectionMappedDefectsData(df):
@@ -235,6 +252,10 @@ def cleanFlInspectionMappedDefectsData(df):
     # Print observations after
     print(df.shape)
 
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedFlInspectionMappedDefectsData.csv'
+    df.to_csv(clean_file_path, index=False)
+
     return df
 
 def cleanFlInspectionProcessesData(df):
@@ -265,6 +286,10 @@ def cleanFlInspectionProcessesData(df):
 
     # Print observations after
     print(df.shape)
+
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedFlInspectionProcessesData.csv'
+    df.to_csv(clean_file_path, index=False)
 
     return df
 
@@ -301,6 +326,11 @@ def cleanFlInspectionData(df):
 
     # Print observations after
     print(df.shape)
+
+    # Save the cleaned DataFrame to a new CSV file
+    clean_file_path = './Datasets/cleanedDatasets/cleanedFlInspectionData.csv'
+    df.to_csv(clean_file_path, index=False)
+
 
     return df
 

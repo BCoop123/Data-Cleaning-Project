@@ -128,9 +128,12 @@ def mergeDatasets(dataframeList):
         df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
 
         # Join FlInspectionData and FlInspectionProcessesData
-        df1 = pd.merge(dataframeList[6], dataframeList[5], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
-        df1 = pd.merge(df1, dataframeList[3], on='FLInspectionID', how='outer')
-        df1 = pd.merge(df1, dataframeList[4], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
+        #left_on='FLInspectionID', right_on='InspectionProcessID',
+        df1 = pd.merge(dataframeList[6], dataframeList[5], how='outer')
+        #on='FLInspectionID', 
+        df1 = pd.merge(df1, dataframeList[3], how='outer')
+        #right_on='InspectionProcessID', left_on='FLInspectionID'
+        df1 = pd.merge(df1, dataframeList[4], how='outer')
         df1.to_csv('./Datasets/mergedInspectionData.csv', index=False)
 
         df.drop_duplicates()
@@ -184,19 +187,12 @@ def testConnection(connection):
         result = cursor.fetchall()
         print(result)
 
-
-        # Close the connection
-        connection.close()
-
         print("Success")
 
     except:
         print("Failure")
 
-def exportToDatabase(connection, dataframeList):
-    df = dataframeList[0]
-    df2 = dataframeList[1]
-    #print(df.columns)
+def exportCoilsData(connection, df):
 
     mergedCoilsDataColumns = {
         "CoilId": "INT",
@@ -361,11 +357,8 @@ def exportToDatabase(connection, dataframeList):
     result = cursor.fetchall()
     print(result)
 
-    # Assuming 'ClaimCreateDate' is the column with the VARCHAR(30)
-    df['ClaimCreateDate'] = pd.to_datetime(df['ClaimCreateDate'], format='%m/%d/%Y %H:%M:%S:%f', errors='coerce')
-
     # Insert into merged_coils_data table
-    #count = 0
+    count = 0
 
     columns_str = ', '.join(map(str, df.columns))
 
@@ -388,8 +381,8 @@ def exportToDatabase(connection, dataframeList):
         insert_query = f"INSERT INTO merged_coils_data ({columns_str}) VALUES ({values_str});"
         cursor.execute(insert_query)
 
-        #count += 1
-        #print(count)
+        count += 1
+        print(count)
 
     #SELECT from merged_coils_data
     #cursor.execute('SELECT * from merged_coils_data')
@@ -399,7 +392,276 @@ def exportToDatabase(connection, dataframeList):
 
     # Close the connection
     connection.commit()
-    connection.close()
+
+    print("Success")
+
+    #except:
+        #print("Failure")
+
+def exportInspectionData(connection, df):
+
+    mergedInspectionDataColumns = {
+        'FLInspectionCommentID': 'INT',
+        'FLInspectionID': 'INT',
+        'DefectMapSeqNumber': 'INT',
+        'DefectMapRemarkSeqNumber': 'INT',
+        'Comment': 'VARCHAR(256)',
+        'CreateProgram': 'VARCHAR(30)',
+        'CreateDate': 'INT',
+        'CreateTime': 'INT',
+        'ChangeProgram': 'VARCHAR(30)',
+        'ChangeDate': 'INT',
+        'ChangeTime': 'INT',
+        'isActive': 'INT',
+        'LineID': 'INT',
+        'InspectionDate': 'SMALLVARCHAR(30)',
+        'InspectionDateInt': 'INT',
+        'InspectionTime': 'SMALLVARCHAR(30)',
+        'InspectionTimeInt': 'INT',
+        'DealerCode': 'SMALLINT',
+        'SuperiorFinishCode': 'NCHAR(10)',
+        'InspectionNumber': 'INT',
+        'ExitCoilNumber': 'NCHAR(10)',
+        'ExitCoilDivision': 'NCHAR(10)',
+        'PackProductCode': 'NCHAR(10)',
+        'SteelGradeID': 'INT',
+        'CurrentGauge': 'FLOAT',
+        'HotAPGauge': 'FLOAT',
+        'ColdAPGauge': 'FLOAT',
+        'CurrentWidth': 'FLOAT',
+        'InitialWidth': 'FLOAT',
+        'NetWeight': 'FLOAT',
+        'TotalLength': 'FLOAT',
+        'TotalSheets': 'INT',
+        'Percent1AQualityExt': 'DECIMAL(5,2)',
+        'Percent1BQualityExt': 'DECIMAL(5,2)',
+        'Percent2QualityExt': 'DECIMAL(5,2)',
+        'PercentScrapQualityExt': 'DECIMAL(5,2)',
+        'Percent1AQualityIntCAP': 'DECIMAL(5,2)',
+        'Percent1BQualityIntCAP': 'DECIMAL(5,2)',
+        'Percent2QualityIntCAP': 'DECIMAL(5,2)',
+        'PercentScrapQualityIntCAP': 'DECIMAL(5,2)',
+        'Percent1AQualityExtCAP': 'DECIMAL(5,2)',
+        'Percent1BQualityExtCAP': 'DECIMAL(5,2)',
+        'Percent2QualityExtCAP': 'DECIMAL(5,2)',
+        'PercentScrapQualityExtCAP': 'DECIMAL(5,2)',
+        'Percent1AQualityIntHAP': 'DECIMAL(5,2)',
+        'Percent1BQualityIntHAP': 'DECIMAL(5,2)',
+        'Percent2QualityIntHAP': 'DECIMAL(5,2)',
+        'PercentScrapQualityIntHAP': 'DECIMAL(5,2)',
+        'Percent1AQualityExtHAP': 'DECIMAL(5,2)',
+        'Percent1BQualityExtHAP': 'DECIMAL(5,2)',
+        'Percent2QualityExtHAP': 'DECIMAL(5,2)',
+        'PercentScrapQualityExtHAP': 'DECIMAL(5,2)',
+        'MnDefect1': 'INT',
+        'DefectGroup1': 'NCHAR(10)',
+        'DefectGroup2': 'NCHAR(10)',
+        'MnDefect2': 'INT',
+        'MnDefectCAPInt1': 'INT',
+        'MnDefectCAPInt2': 'INT',
+        'MnDefectCAPExt1': 'INT',
+        'MnDefectCAPExt2': 'INT',
+        'CAPDefectiveLength': 'FLOAT',
+        'MnDefectHAPInt1': 'INT',
+        'MnDefectHAPInt2': 'INT',
+        'MnDefectHAPExt1': 'INT',
+        'MnDefectHAPExt2': 'INT',
+        'CAPSolution': 'INT',
+        'HAPSolution': 'INT',
+        'CutLineSolution': 'INT',
+        'ChangeOfSide': 'NCHAR(10)',
+        'CAPLineGrpCode': 'NCHAR(10)',
+        'HAPLineGrpCode': 'NCHAR(10)',
+        'ZMillLineGrpCode': 'NCHAR(10)',
+        'CutLineGrpCode': 'NCHAR(10)',
+        'CAPWorkCode': 'INT',
+        'HAPWorkCode': 'INT',
+        'CutLineWorkCode': 'INT',
+        'CAPYield': 'DECIMAL(4,3)',
+        'HAPYield': 'DECIMAL(4,3)',
+        'CutLineYield': 'DECIMAL(4,3)',
+        'AccumulatedEfficiency': 'DECIMAL(4,3)',
+        'CreateProgram': 'NCHAR(10)',
+        'CreateDate': 'INT',
+        'CreateTime': 'INT',
+        'ChangeProgram': 'NCHAR(10)',
+        'ChangeDate': 'INT',
+        'ChangeTime': 'INT',
+        'isActive': 'INT',
+        'InspectionDateTime': 'VARCHAR(30)',
+        'InspectionMappedDefectID': 'INT',
+        'InspectionProcessID': 'INT',
+        'DefectCodeID': 'INT',
+        'SideID': 'INT',
+        'FaceID': 'INT',
+        'StartPosition': 'INT',
+        'Length': 'INT',
+        'QualityID': 'INT',
+        'DefectCount': 'INT',
+        'Description': 'VARCHAR(256)',
+        'FaceDescription': 'VARCHAR(256)',
+        'QualityCode': 'INT',
+        'QualityDescription': 'VARCHAR(256)',
+        'SideDescription': 'CHAR(10)',
+        'InspectionProcessID': 'INT',
+        'FlatCoilID': 'INT',
+        'CoilNumber': 'VARCHAR(30)',
+        'LineID': 'INT',
+        'ProcessStartTime': 'TIME',
+        'InspectionStartTime': 'TIME',
+        'InspectionEndTime': 'TIME',
+        'ApprovedTime': 'TIME',
+        'InspectionGroup': 'VARCHAR(30)',
+        'InspectionStatusID': 'VARCHAR(30)',
+        'LateralEdgeSeamTopOS': 'INT',
+        'LateralEdgeSeamTopMS': 'INT',
+        'LateralEdgeSeamBottomOS': 'INT',
+        'LateralEdgeSeamBottomMS': 'INT',
+        'InspectionType': 'CHAR(10)',
+        'Observations': 'VARCHAR(512)',
+        'BuffTopHead': 'VARCHAR(30)',
+        'BuffTopCenter': 'VARCHAR(30)',
+        'BuffTopTail': 'VARCHAR(30)',
+        'BuffBottomHead': 'VARCHAR(30)',
+        'BuffBottomCenter': 'VARCHAR(30)',
+        'BuffBottomTail': 'VARCHAR(30)',
+        'C47HeadHeight': 'VARCHAR(30)',
+        'C47MiddleHeight': 'VARCHAR(30)',
+        'C47TailHeight': 'VARCHAR(30)',
+        'HeadPitch': 'VARCHAR(30)',
+        'MiddlePitch': 'VARCHAR(30)',
+        'TailPitch': 'VARCHAR(30)',
+        'C09HeadHeight': 'VARCHAR(30)',
+        'C09MiddleHeight': 'VARCHAR(30)',
+        'C09TailHeight': 'VARCHAR(30)',
+        'RoughnessTHeadOSSeverity': 'VARCHAR(30)',
+        'RoughnessTHeadCenterSeverity': 'VARCHAR(30)',
+        'RoughnessTHeadDSSeverity': 'VARCHAR(30)',
+        'RoughnessTBodyOSSeverity': 'VARCHAR(30)',
+        'RoughnessTBodyCenterSeverity': 'VARCHAR(30)',
+        'RoughnessTBodyDSSeverity': 'VARCHAR(30)',
+        'RoughnessTTailOSSeverity': 'VARCHAR(30)',
+        'RoughnessTTailCenterSeverity': 'VARCHAR(30)',
+        'RoughnessTTailDSSeverity': 'VARCHAR(30)',
+        'RoughnessBHeadOSSeverity': 'VARCHAR(30)',
+        'RoughnessBHeadCenterSeverity': 'VARCHAR(30)',
+        'RoughnessBHeadDSSeverity': 'VARCHAR(30)',
+        'RoughnessBBodyOSSeverity': 'VARCHAR(30)',
+        'RoughnessBBodyCenterSeverity': 'VARCHAR(30)',
+        'RoughnessBBodyDSSeverity': 'VARCHAR(30)',
+        'RoughnessBTailOSSeverity': 'VARCHAR(30)',
+        'RoughnessBTailCenterSeverity': 'VARCHAR(30)',
+        'RoughnessBTailDSSeverity': 'VARCHAR(30)',
+        'RoughnessTHeadOSType': 'VARCHAR(30)',
+        'RoughnessTHeadCenterType': 'VARCHAR(30)',
+        'RoughnessTHeadDSType': 'VARCHAR(30)',
+        'RoughnessTBodyOSType': 'VARCHAR(30)',
+        'RoughnessTBodyCenterType': 'VARCHAR(30)',
+        'RoughnessTBodyDSType': 'VARCHAR(30)',
+        'RoughnessTTailOSType': 'VARCHAR(30)',
+        'RoughnessTTailCenterType': 'VARCHAR(30)',
+        'RoughnessTTailDSType': 'VARCHAR(30)',
+        'RoughnessBHeadOSType': 'VARCHAR(30)',
+        'RoughnessBHeadCenterType': 'VARCHAR(30)',
+        'RoughnessBHeadDSType': 'VARCHAR(30)',
+        'RoughnessBBodyOSType': 'VARCHAR(30)',
+        'RoughnessBBodyCenterType': 'VARCHAR(30)',
+        'RoughnessBBodyDSType': 'VARCHAR(30)',
+        'RoughnessBTailOSType': 'VARCHAR(30)',
+        'RoughnessBTailCenterType': 'VARCHAR(30)',
+        'RoughnessBTailDSType': 'VARCHAR(30)',
+        'HeadDefectCode': 'VARCHAR(30)',
+        'TailScrap': 'VARCHAR(30)',
+        'HeadScrap': 'VARCHAR(30)',
+        'TailDefectCode': 'VARCHAR(30)',
+        'SamplesTaken': 'VARCHAR(30)',
+        'PaperUsed': 'VARCHAR(30)',
+        'UserID': 'VARCHAR(30)',
+        'active': 'INT'
+    }
+
+    # Create a new dictionary with only matching key-value pairs
+    mergedInspectionDataColumns = {key: value for key, value in mergedInspectionDataColumns.items() if key in df.columns}
+    print(mergedInspectionDataColumns)
+    print(list(df.columns))
+
+    # Print the resulting dictionary
+    #print(mergedinspectionDataColumns)
+
+    #try:
+    # Create a cursor object to interact with the database
+    cursor = connection.cursor()
+
+    #Truncate table
+    query = "DO $$\
+                BEGIN\
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_inspection_data') THEN\
+                    EXECUTE 'TRUNCATE TABLE merged_inspection_data';\
+                END IF;\
+            END $$;"
+    cursor.execute(query)
+
+    # Drop table
+    cursor.execute('DROP TABLE IF EXISTS merged_inspection_data; COMMIT;')
+
+    # Create a table
+
+    # Initialize an empty string to store the column definitions
+    column_definitions = ""
+
+    # Iterate through the dictionary items
+    for column_name, data_type in mergedInspectionDataColumns.items():
+        # Concatenate the column name and data type
+        column_definitions += f"{column_name} {data_type}"
+
+        # Add a comma if it's not the last item
+        if column_name != list(mergedInspectionDataColumns.keys())[-1]:
+            column_definitions += ", "
+
+    # Print the resulting column definitions string
+    #print(column_definitions)
+
+    cursor.execute('CREATE TABLE IF NOT EXISTS merged_inspection_data ({}); COMMIT;'.format(column_definitions))
+    
+    cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+    result = cursor.fetchall()
+    print(result)
+
+    # Insert into merged_inspection_data table
+    count = 0
+
+    columns_str = ', '.join(map(str, df.columns))
+
+    for index, row in df.iterrows():
+        values = []
+        for value in row:
+            if pd.isnull(value):
+                values.append('NULL')
+            elif isinstance(value, (int, float)):
+                values.append(str(value))
+            elif isinstance(value, str):
+                values.append(f"'{value}'")
+            else:
+                values.append(str(value))  # Add additional handling for other data types if needed
+        
+        values_str = ', '.join(values)
+        #print(columns_str)
+        #print(values_str)
+        
+        insert_query = f"INSERT INTO merged_inspection_data ({columns_str}) VALUES ({values_str});"
+        cursor.execute(insert_query)
+
+        count += 1
+        print(count)
+
+    #SELECT from merged_inspection_data
+    #cursor.execute('SELECT * from merged_inspection_data')
+    #result = cursor.fetchall()
+    #print(result)
+
+
+    # Commit
+    connection.commit()
 
     print("Success")
 
@@ -410,6 +672,18 @@ def cleanPTechCoilsData(df):
     # Print observations before
     print(df.shape)
 
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Drop the 'isActive' column as all the value is 1 in the dataset
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
     # detect if both are empty, null, or NAN.
     df = df[df["CoilId"] != df["BdeCoilId"]]
 
@@ -419,11 +693,15 @@ def cleanPTechCoilsData(df):
     # Filter out rows where 'Campaign' is not an integer
     df = df[df['Campaign'].notna() & (df['Campaign'] % 1 == 0)]
 
-    # Remove Charge column since it is always empty
-    #df.drop(['Charge'], axis=1, inplace=True)
+    # Drop records where length, width, thickness, or weight are <= 0. This is not possible.
+    df = df[df["Length"] > 0]
+    df = df[df["Width"] > 0]
+    df = df[df["Thickness"] > 0]
+    df = df[df["Weight"] > 0]
 
     #check if the columns has null or same values in the entire row
     columns_to_drop = df.columns[df.nunique() == 1]
+
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
@@ -433,12 +711,9 @@ def cleanPTechCoilsData(df):
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
-
-    # Drop records where length, width, thickness, or weight are <= 0. This is not possible.
-    df = df[df["Length"] > 0]
-    df = df[df["Width"] > 0]
-    df = df[df["Thickness"] > 0]
-    df = df[df["Weight"] > 0]
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
@@ -450,19 +725,34 @@ def cleanDefectMapsData(df):
     # Print observations before
     print(df.shape)
 
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
     # empty, null
     df = df[df["CoilId"] != '']
     df = df[df["CoilId"] != None]
     df = df[df["DefectId"] != '']
     df = df[df["DefectId"] != None]
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
-
     df = df[df["PeriodLength"] > 0]
     df = df[df["SizeCD"] > 0]
     df = df[df["SizeMD"] > 0]
+
+    # Drop the 'isActive' column as all the value is 1 in the dataset
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
@@ -473,50 +763,107 @@ def cleanClaimsData(df):
     # Print observations before
     print(df.shape)
 
+    # Rename columns
+    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
     # empty, null
-    df = df[df["ProductIdentification1"] != '']
-    df = df[df["ProductIdentification1"] != None]
+    df = df[df["BdeCoilId"] != '']
+    df = df[df["BdeCoilId"] != None]
     df = df[df["ClaimNumber"] != '']
     df = df[df["ClaimNumber"] != None]
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
 
     df = df[df["TotalWeightClaimed"] > 0]
     df = df[df["CustomerClaimDefectWeight"] > 0]
     df = df[df["NASIdentifiedDefectWeight"] > 0]
     df = df[df["AreaofResponsibilityDefectWeigh"] > 0]
-    
-    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
 
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+    # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
-    #print(df.columns)
 
     return df
 
 def cleanFlInspectionCommentsData(df):
-    # Drop the 'isActive' column as all the value is 1 in the dataset ??
+    # Print observations before
+    print(df.shape)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Drop the below columns if they have the same values for all rows
+    if (df['ChangeProgram'] == df['CreateProgram']).all():
+        df.drop(['ChangeProgram'], axis=1, inplace=True)
+
+    if (df['ChangeDate'] == df['CreateDate']).all():
+        df.drop(['ChangeDate'], axis=1, inplace=True)
+
+    if (df['ChangeTime'] == df['CreateTime']).all():
+        df.drop(['ChangeTime'], axis=1, inplace=True)
+
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
 
     return df
-
-
 
 def cleanFlInspectionMappedDefectsData(df):
     # Print observations before
     print(df.shape)
 
-    # Remove this column the defect count is always 1
-    df.drop(['DefectCount'], axis=1, inplace=True)
+    # Rename columns
+    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
+    df = df.loc[df["Length"] > 0]
 
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
 
-    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
-    df = df.loc[df["Length"] > 0]
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
@@ -526,6 +873,21 @@ def cleanFlInspectionMappedDefectsData(df):
 def cleanFlInspectionProcessesData(df):
     # Print observations before
     print(df.shape)
+
+    # Rename columns
+    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
 
     # Remove duplicate rows
     df.drop_duplicates(inplace=True)
@@ -552,13 +914,9 @@ def cleanFlInspectionProcessesData(df):
     # "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
     # ]
 
-    # for value in values:
-    #     df.drop([value], axis=1, inplace=True)
-
-    # #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
@@ -568,15 +926,33 @@ def cleanFlInspectionProcessesData(df):
 def cleanFlInspectionData(df):
     # Print observations before
     print(df.shape)
+    
+    # Rename columns that were spelled incorrectly
+    df.rename(columns={"CurrentGuage": "CurrentGauge"}, inplace=True)
+    df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
+    df.rename(columns={"ColdAPGuage": "ColdAPGauge"}, inplace=True)
 
-    # a lot of duplicates data in this datasets (More than 50% data are duplicates)
-    # drop the duplications
-    df = df.drop_duplicates()
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Drop redundant and repeated columns
+    df.drop(['InspectionDate', 'InspectionTime'], axis=1, inplace=True)
 
     #check if the columns has null or same values in the entire row
     columns_to_drop = df.columns[df.nunique() == 1]
+
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
+
+    # a lot of duplicates data in this datasets (More than 50% data are duplicates) drop the duplications
+    df = df.drop_duplicates()
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
     # Print observations after
     print(df.shape)
@@ -653,6 +1029,11 @@ def main(flag):
         mergedDataframeList = mergeDatasets(cleanedDataframeList)
         connection = dbConnect(credentials)
         #testConnection(connection)
-        exportToDatabase(connection, mergedDataframeList)
+        exportCoilsData(connection, mergedDataframeList[0])
+        exportInspectionData(connection, mergedDataframeList[1])
+
+        # Close the connection
+        connection.close()
+        
 
 main(flag)

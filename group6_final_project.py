@@ -26,50 +26,297 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
 #========================================================================
-# define functions
+# Data Cleaning Functions
 #========================================================================
 
-# Check if Datasets folder exists before running
-flag = True
+def cleanPTechCoilsData(df):
+    # Print observations before
+    print(df.shape)
 
-# Initilize database credentials
-credentials = []
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-host = ""
-database = ""
-port = ""
-user = ""
-password = ""
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
-#check if datasets file exit
-if not os.path.exists('./Datasets'):
-    flag = False
-    print("Need to create a folder named Datasets.")
+    # Drop the 'isActive' column as all the value is 1 in the dataset
+    columns_to_drop = df.columns[df.nunique() == 1]
 
-#check if db.conf file exit
-if not os.path.exists('./db.conf'):
-    flag = False
-    print("Need to create a file name db.conf with credentials.")
-else:
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
 
-    try:
-        # creat an instance of the parser
-        confP = cp.ConfigParser()
+    # detect if both are empty, null, or NAN.
+    df = df[df["CoilId"] != df["BdeCoilId"]]
 
-        # read in the ini or configuration file
-        confP.read(["db.conf"])
+    # Assuming 'Campaign' is the column you want to filter
+    df['Campaign'] = pd.to_numeric(df['Campaign'], errors='coerce')
 
-        host = confP.get("db", "url")
-        database = confP.get("db", "database")
-        port = confP.get("db", "port")
-        user = confP.get("db", "dbuser")
-        password = confP.get("db", "dbpassword")
-        
-        credentials = [host, database, port, user, password]
+    # Filter out rows where 'Campaign' is not an integer
+    df = df[df['Campaign'].notna() & (df['Campaign'] % 1 == 0)]
 
-    except:
-        flag = False
-        print("The db.conf file is configured incorrectly. See README.md for configuration.")
+    # Drop records where length, width, thickness, or weight are <= 0. This is not possible.
+    df = df[df["Length"] > 0]
+    df = df[df["Width"] > 0]
+    df = df[df["Thickness"] > 0]
+    df = df[df["Weight"] > 0]
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Fix capitilization issues
+    df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanDefectMapsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # empty, null
+    df = df[df["CoilId"] != '']
+    df = df[df["CoilId"] != None]
+    df = df[df["DefectId"] != '']
+    df = df[df["DefectId"] != None]
+
+    df = df[df["PeriodLength"] > 0]
+    df = df[df["SizeCD"] > 0]
+    df = df[df["SizeMD"] > 0]
+
+    # Drop the 'isActive' column as all the value is 1 in the dataset
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanClaimsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # Rename columns
+    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # empty, null
+    df = df[df["BdeCoilId"] != '']
+    df = df[df["BdeCoilId"] != None]
+    df = df[df["ClaimNumber"] != '']
+    df = df[df["ClaimNumber"] != None]
+
+    df = df[df["TotalWeightClaimed"] > 0]
+    df = df[df["CustomerClaimDefectWeight"] > 0]
+    df = df[df["NASIdentifiedDefectWeight"] > 0]
+    df = df[df["AreaofResponsibilityDefectWeigh"] > 0]
+
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+    # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanFlInspectionCommentsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Drop the below columns if they have the same values for all rows
+    if (df['ChangeProgram'] == df['CreateProgram']).all():
+        df.drop(['ChangeProgram'], axis=1, inplace=True)
+
+    if (df['ChangeDate'] == df['CreateDate']).all():
+        df.drop(['ChangeDate'], axis=1, inplace=True)
+
+    if (df['ChangeTime'] == df['CreateTime']).all():
+        df.drop(['ChangeTime'], axis=1, inplace=True)
+
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanFlInspectionMappedDefectsData(df):
+    # Print observations before
+    print(df.shape)
+
+    # Rename columns
+    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
+    df = df.loc[df["Length"] > 0]
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanFlInspectionProcessesData(df):
+    # Print observations before
+    print(df.shape)
+
+    # Rename columns
+    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+def cleanFlInspectionData(df):
+    # Print observations before
+    print(df.shape)
+    
+    # Rename columns that were spelled incorrectly
+    df.rename(columns={"CurrentGuage": "CurrentGauge"}, inplace=True)
+    df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
+    df.rename(columns={"ColdAPGuage": "ColdAPGauge"}, inplace=True)
+
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Drop redundant and repeated columns
+    df.drop(['InspectionDate', 'InspectionTime'], axis=1, inplace=True)
+
+    #check if the columns has null or same values in the entire row
+    columns_to_drop = df.columns[df.nunique() == 1]
+
+    #drop those columns that has null or same values in the entire row
+    df = df.drop(columns=columns_to_drop)
+
+    # a lot of duplicates data in this datasets (More than 50% data are duplicates) drop the duplications
+    df = df.drop_duplicates()
+
+     # Escape ' character
+    string_columns = df.select_dtypes(include='object').columns
+    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Print observations after
+    print(df.shape)
+
+    return df
+
+# Runs the individual cleansing functions for all of the datasets
+def cleanData(dataframeList):
+    cleanedDataframeList = []
+    
+    cleanedDataframeList.append(cleanPTechCoilsData(dataframeList[0]))
+    cleanedDataframeList.append(cleanDefectMapsData(dataframeList[1]))
+    cleanedDataframeList.append(cleanClaimsData(dataframeList[2]))
+    cleanedDataframeList.append(cleanFlInspectionCommentsData(dataframeList[3]))
+    cleanedDataframeList.append(cleanFlInspectionMappedDefectsData(dataframeList[4]))
+    cleanedDataframeList.append(cleanFlInspectionProcessesData(dataframeList[5]))
+    cleanedDataframeList.append(cleanFlInspectionData(dataframeList[6]))
+
+    return cleanedDataframeList
+
+
+
+
+#========================================================================
+# Retrieve Data
+#========================================================================
 
 # Get the data contained in all of the CSV files used for this project
 def getData():
@@ -95,19 +342,12 @@ def getData():
     except:
         print("Failed to read files.")
 
-# Runs the individual cleansing functions for all of the datasets
-def cleanData(dataframeList):
-    cleanedDataframeList = []
-    
-    cleanedDataframeList.append(cleanPTechCoilsData(dataframeList[0]))
-    cleanedDataframeList.append(cleanDefectMapsData(dataframeList[1]))
-    cleanedDataframeList.append(cleanClaimsData(dataframeList[2]))
-    cleanedDataframeList.append(cleanFlInspectionCommentsData(dataframeList[3]))
-    cleanedDataframeList.append(cleanFlInspectionMappedDefectsData(dataframeList[4]))
-    cleanedDataframeList.append(cleanFlInspectionProcessesData(dataframeList[5]))
-    cleanedDataframeList.append(cleanFlInspectionData(dataframeList[6]))
 
-    return cleanedDataframeList
+
+
+#========================================================================
+# Merge Datasets Functions
+#========================================================================
 
 # Merge datasets given the names, joinCondition, and joinType
 def mergeDatasets(dataframeList):
@@ -145,6 +385,12 @@ def mergeDatasets(dataframeList):
         return mergedDataframeList
     #except:
         print("Failed to merge datasets.")
+
+
+
+#========================================================================
+# Database Functions
+#========================================================================
 
 def dbConnect(credentials):
     try:
@@ -668,345 +914,71 @@ def exportInspectionData(connection, df):
     #except:
         #print("Failure")
 
-def cleanPTechCoilsData(df):
-    # Print observations before
-    print(df.shape)
 
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
-    # Drop the 'isActive' column as all the value is 1 in the dataset
-    columns_to_drop = df.columns[df.nunique() == 1]
+#========================================================================
+# Error Handling Functions
+#========================================================================
 
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
+def detectErrors():
+    # Check if Datasets folder exists before running
+    flag = True
 
-    # detect if both are empty, null, or NAN.
-    df = df[df["CoilId"] != df["BdeCoilId"]]
+    # Initilize database credentials
+    credentials = []
 
-    # Assuming 'Campaign' is the column you want to filter
-    df['Campaign'] = pd.to_numeric(df['Campaign'], errors='coerce')
+    host = ""
+    database = ""
+    port = ""
+    user = ""
+    password = ""
 
-    # Filter out rows where 'Campaign' is not an integer
-    df = df[df['Campaign'].notna() & (df['Campaign'] % 1 == 0)]
+    #check if datasets file exit
+    if not os.path.exists('./Datasets'):
+        flag = False
+        print("Need to create a folder named Datasets.")
 
-    # Drop records where length, width, thickness, or weight are <= 0. This is not possible.
-    df = df[df["Length"] > 0]
-    df = df[df["Width"] > 0]
-    df = df[df["Thickness"] > 0]
-    df = df[df["Weight"] > 0]
+    #check if db.conf file exit
+    if not os.path.exists('./db.conf'):
+        flag = False
+        print("Need to create a file name db.conf with credentials.")
+    else:
 
-    #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+        try:
+            # creat an instance of the parser
+            confP = cp.ConfigParser()
 
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
+            # read in the ini or configuration file
+            confP.read(["db.conf"])
 
-    # Fix capitilization issues
-    df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
+            host = confP.get("db", "url")
+            database = confP.get("db", "database")
+            port = confP.get("db", "port")
+            user = confP.get("db", "dbuser")
+            password = confP.get("db", "dbpassword")
+            
+            credentials = [host, database, port, user, password]
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
+        except:
+            flag = False
+            print("The db.conf file is configured incorrectly. See README.md for configuration.")
 
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+    return flag, credentials
 
-    # Print observations after
-    print(df.shape)
 
-    return df
 
-
-def cleanDefectMapsData(df):
-    # Print observations before
-    print(df.shape)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    # empty, null
-    df = df[df["CoilId"] != '']
-    df = df[df["CoilId"] != None]
-    df = df[df["DefectId"] != '']
-    df = df[df["DefectId"] != None]
-
-    df = df[df["PeriodLength"] > 0]
-    df = df[df["SizeCD"] > 0]
-    df = df[df["SizeMD"] > 0]
-
-    # Drop the 'isActive' column as all the value is 1 in the dataset
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-def cleanClaimsData(df):
-    # Print observations before
-    print(df.shape)
-
-    # Rename columns
-    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    # empty, null
-    df = df[df["BdeCoilId"] != '']
-    df = df[df["BdeCoilId"] != None]
-    df = df[df["ClaimNumber"] != '']
-    df = df[df["ClaimNumber"] != None]
-
-    df = df[df["TotalWeightClaimed"] > 0]
-    df = df[df["CustomerClaimDefectWeight"] > 0]
-    df = df[df["NASIdentifiedDefectWeight"] > 0]
-    df = df[df["AreaofResponsibilityDefectWeigh"] > 0]
-
-    # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
-    # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-def cleanFlInspectionCommentsData(df):
-    # Print observations before
-    print(df.shape)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    # Drop the below columns if they have the same values for all rows
-    if (df['ChangeProgram'] == df['CreateProgram']).all():
-        df.drop(['ChangeProgram'], axis=1, inplace=True)
-
-    if (df['ChangeDate'] == df['CreateDate']).all():
-        df.drop(['ChangeDate'], axis=1, inplace=True)
-
-    if (df['ChangeTime'] == df['CreateTime']).all():
-        df.drop(['ChangeTime'], axis=1, inplace=True)
-
-    # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-def cleanFlInspectionMappedDefectsData(df):
-    # Print observations before
-    print(df.shape)
-
-    # Rename columns
-    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
-    df = df.loc[df["Length"] > 0]
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-def cleanFlInspectionProcessesData(df):
-    # Print observations before
-    print(df.shape)
-
-    # Rename columns
-    df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
-    # # Remove these columns they contain the same value for every record
-    # values = [
-    # "InspectionGroup","LateralEdgeSeamTopOS", "LateralEdgeSeamTopMS", "LateralEdgeSeamBottomOS",
-    # "LateralEdgeSeamBottomMS", "InspectionType", "BuffTopHead", "BuffTopCenter",
-    # "BuffTopTail", "BuffBottomHead", "BuffBottomCenter", "BuffBottomTail",
-    # "C47HeadHeight", "C47MiddleHeight", "C47TailHeight", "HeadPitch", "MiddlePitch",
-    # "TailPitch", "C09HeadHeight", "C09MiddleHeight", "C09TailHeight",
-    # "RoughnessTHeadOSSeverity", "RoughnessTHeadCenterSeverity", "RoughnessTHeadDSSeverity",
-    # "RoughnessTBodyOSSeverity", "RoughnessTBodyCenterSeverity", "RoughnessTBodyDSSeverity",
-    # "RoughnessTTailOSSeverity", "RoughnessTTailCenterSeverity", "RoughnessTTailDSSeverity",
-    # "RoughnessBHeadOSSeverity", "RoughnessBHeadCenterSeverity", "RoughnessBHeadDSSeverity",
-    # "RoughnessBBodyOSSeverity", "RoughnessBBodyCenterSeverity", "RoughnessBBodyDSSeverity",
-    # "RoughnessBTailOSSeverity", "RoughnessBTailCenterSeverity", "RoughnessBTailDSSeverity",
-    # "RoughnessTHeadOSType", "RoughnessTHeadCenterType", "RoughnessTHeadDSType",
-    # "RoughnessTBodyOSType", "RoughnessTBodyCenterType", "RoughnessTBodyDSType",
-    # "RoughnessTTailOSType", "RoughnessTTailCenterType", "RoughnessTTailDSType",
-    # "RoughnessBHeadOSType", "RoughnessBHeadCenterType", "RoughnessBHeadDSType",
-    # "RoughnessBBodyOSType", "RoughnessBBodyCenterType", "RoughnessBBodyDSType",
-    # "RoughnessBTailOSType", "RoughnessBTailCenterType", "RoughnessBTailDSType",
-    # "HeadDefectCode", "TailScrap", "HeadScrap", "TailDefectCode", "SamplesTaken", "PaperUsed", "UserID"
-    # ]
-
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-def cleanFlInspectionData(df):
-    # Print observations before
-    print(df.shape)
-    
-    # Rename columns that were spelled incorrectly
-    df.rename(columns={"CurrentGuage": "CurrentGauge"}, inplace=True)
-    df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
-    df.rename(columns={"ColdAPGuage": "ColdAPGauge"}, inplace=True)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
-    # Drop redundant and repeated columns
-    df.drop(['InspectionDate', 'InspectionTime'], axis=1, inplace=True)
-
-    #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
-    # a lot of duplicates data in this datasets (More than 50% data are duplicates) drop the duplications
-    df = df.drop_duplicates()
-
-     # Escape ' character
-    string_columns = df.select_dtypes(include='object').columns
-    df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
-
-    # Print observations after
-    print(df.shape)
-
-    return df
-
-## Use of tokenization, lammatixation and stopword
-def NLP():
-    # Download nltk resources (run only once)
-    nltk.download('punkt')
-    nltk.download('wordnet')
-    nltk.download('stopwords')
-
-    # Load the CSV file
-    file_path = 'FLInspectionComments.csv'
-    df = pd.read_csv(file_path)
-
-    # Check the structure of your DataFrame
-    print(df.head())
-
-    # Spell Check, Tokenization, Lemmatization, and Stopword Removal
-    lemmatizer = WordNetLemmatizer()
-    # spell = SpellChecker()
-    stop_words = set(stopwords.words('english'))
-
-    def process_text(text):
-        # Spell check
-        tokens = word_tokenize(str(text))
-        # corrected_tokens = [spell.correction(token) for token in tokens]
-        corrected_tokens = [token for token in tokens]
-
-        # Lemmatization with handling None type
-        lemmatized_tokens = [lemmatizer.lemmatize(token) if token is not None else '' for token in corrected_tokens]
-
-        # Remove stopwords
-        filtered_tokens = [token for token in lemmatized_tokens if token.lower() not in stop_words and token != '']
-
-        return ' '.join(filtered_tokens)
-
-    # Apply processing to the 'Comment' column
-    df['comments_processed'] = df['Comment'].apply(process_text)
-
-    # Save the DataFrame with the new column
-    output_file_path = 'FLInspectionComments_Processed.csv'
-    df[['FLInspectionCommentID', 'comments_processed']].to_csv(output_file_path, index=False)
-
-    # Check the updated DataFrame
-    print(df.head())
 
 #========================================================================
 # main program
 #========================================================================
 
-def main(flag):
+def main():
+
+    returnList = detectErrors()
+    flag = returnList[0]
+    credentials = returnList[1]
+
     if flag:
 
         dataframeList = getData()
@@ -1035,5 +1007,4 @@ def main(flag):
         # Close the connection
         connection.close()
         
-
-main(flag)
+main()

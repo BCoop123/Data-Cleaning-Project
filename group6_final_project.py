@@ -19,6 +19,7 @@ import os
 import configparser as cp
 #import sqlite3
 import psycopg2
+import re
 
 #========================================================================
 # define functions
@@ -107,6 +108,8 @@ def cleanData(dataframeList):
 # Merge datasets given the names, joinCondition, and joinType
 def mergeDatasets(dataframeList):
     try:
+        mergedDataframeList = []
+
         # Join PTechCoilsData and DefectMapsData
         # When joining pTechCoilsData with claimsData there are no claims associated with any of the coils
         # given and no claims associated with any of the defects given 
@@ -116,19 +119,16 @@ def mergeDatasets(dataframeList):
         df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
 
         # Join FlInspectionData and FlInspectionProcessesData
-        df2 = pd.merge(dataframeList[6], dataframeList[5], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
-        df2 = pd.merge(df2, dataframeList[3], on='FLInspectionID', how='outer')
-        df2 = pd.merge(df2, dataframeList[4], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
-        df2.to_csv('./Datasets/mergedInspectionData.csv', index=False)
+        df1 = pd.merge(dataframeList[6], dataframeList[5], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
+        df1 = pd.merge(df1, dataframeList[3], on='FLInspectionID', how='outer')
+        df1 = pd.merge(df1, dataframeList[4], left_on='FLInspectionID', right_on='InspectionProcessID', how='outer')
+        df1.to_csv('./Datasets/mergedInspectionData.csv', index=False)
         
+        mergedDataframeList.append(df)
+        mergedDataframeList.append(df1)
+        #print(df.columns)
 
-
-
-        #df3 = pd.merge(df2, df3, on='FLInspectionID', how='outer')
-
-        #df3.to_csv('./Datasets/mergedDefectInspectionData.csv', index=False)
-
-        return df
+        return dataframeList
     except:
         print("Failed to merge datasets.")
 
@@ -152,12 +152,27 @@ def testConnection(connection):
         # Create a cursor object to interact with the database
         cursor = connection.cursor()
 
-        # Create a table
-        cursor.execute('CREATE TABLE IF NOT EXISTS defectsTest (defectID int PRIMARY KEY, name varchar(30))')
+        #Truncate table
+        query = 'TRUNCATE merged_coils_data; COMMIT;'
+        cursor.execute(query)
 
+        # Drop table
+        cursor.execute('DROP TABLE IF EXISTS merged_coils_data; COMMIT;')
+
+        # Create a table
+        cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data (defect_id int PRIMARY KEY, name varchar(30)); COMMIT;')
+        
         cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
         result = cursor.fetchall()
         print(result)
+
+        # Insert into table
+        cursor.execute('INSERT INTO merged_coils_data (defect_id, name) VALUES (123, \'test\')')
+
+        cursor.execute('SELECT * from merged_coils_data')
+        result = cursor.fetchall()
+        print(result)
+
 
         # Close the connection
         connection.close()
@@ -166,6 +181,192 @@ def testConnection(connection):
 
     except:
         print("Failure")
+
+def exportToDatabase(connection, dataframeList):
+    df = dataframeList[0]
+    df2 = dataframeList[1]
+    print(df.columns)
+
+    mergedCoilsDataColumns = {
+        "CoilId": "INT",
+        "StartTime": "TIMESTAMP",
+        "EndTime": "TIMESTAMP",
+        "ParamSet": "INT",
+        "Grade": "INT",
+        "Length": "INT",
+        "Width": "INT",
+        "Thickness": "DECIMAL",
+        "Weight": "INT",
+        "Charge": "VARCHAR(20)",  # Data Type not provided
+        "MaterialId": "INT",
+        "Status": "CHAR",
+        "BdeCoilId": "VARCHAR(20)",
+        "Description": "VARCHAR(20)",
+        "LastDefectId": "INT",
+        "TargetQuality": "INT",
+        "PdiRecvTime": "TIMESTAMP",
+        "SLength": "INT",
+        "InternalStatus": "CHAR",
+        "DefectCount": "INT",
+        "Campaign": "INT",
+        "DefectId": "INT",
+        "Class": "INT",
+        "PeriodId": "INT",
+        "PeriodLength": "INT",
+        "PositionCD": "DECIMAL",
+        "PositionRCD": "DECIMAL",
+        "PositionMD": "DECIMAL",
+        "Side": "INT",
+        "SizeCD": "DECIMAL",
+        "SizeMD": "DECIMAL",
+        "CameraNo": "INT",
+        "DefectNo": "INT",
+        "MergedTo": "INT",
+        "Confidence": "INT",
+        "RoiX0": "INT",
+        "RoiX1": "INT",
+        "RoiY0": "INT",
+        "RoiY1": "INT",
+        "OriginalClass": "INT",
+        "PP_ID": "INT",
+        "PostCL": "INT",
+        "MergerPP": "INT",
+        "OnlineCPP": "INT",
+        "OfflineCPP": "INT",
+        "Rollerid": "INT",
+        "CL_PROD_CLASS": "INT",
+        "CL_TEST_CLASS": "INT",
+        "AbsPosCD": "DECIMAL",
+        "ClaimSource": "CHAR",
+        "ClaimNumber": "INT",
+        "ClaimDispositionSequence": "INT",
+        "BusinessUnit": "CHAR",
+        "ClaimType": "CHAR",
+        "ProductIdentification1": "VARCHAR(20)",
+        "ProductIdentification2": "CHAR",
+        "MaterialSource": "CHAR",
+        "Heat": "VARCHAR(20)",
+        "CastDate": "DATE",
+        "ProductType": "CHAR",
+        "SteelFamily": "CHAR",
+        "SteelType": "INT",
+        "SteelGradeASTMAISI": "VARCHAR(20)",
+        "Finish": "INT",
+        "MaterialGaugeOrDiameter": "DECIMAL",
+        "MaterialWidthOrLegLength": "DECIMAL",
+        "MaterialLength": "DECIMAL",
+        "CustomerNumber": "INT",
+        "CustomerDestination": "INT",
+        "OrderAbbreviation": "CHAR",
+        "OrderNumber": "INT",
+        "OrderItem": "INT",
+        "NationalExportCode": "CHAR",
+        "SisterDivisionsClaimed": "CHAR",
+        "Format": "INT",
+        "FormatMinGaugeOrDiameter": "DECIMAL",
+        "FormatMaxGaugeOrDiameter": "DECIMAL",
+        "FormatMinWidthOrLength": "DECIMAL",
+        "FormatMaxWidthOrLength": "DECIMAL",
+        "FormatMinWeight": "INT",
+        "FormatMaxWeight": "INT",
+        "InvoiceSeries": "CHAR",
+        "InvoiceYear": "INT",
+        "InvoiceNumber": "INT",
+        "InvoiceItem": "INT",
+        "OriginalShippedWeight": "INT",
+        "OriginalShipQuality": "VARCHAR(20)",
+        "ClaimDispositionStatus": "CHAR",
+        "ClaimCreateDate": "DATE",
+        "QCApprovedDate": "DATE",
+        "ClosedDate": "DATE",
+        "TotalWeightClaimed": "INT",
+        "CustomerClaimDefect": "VARCHAR(20)",
+        "CustomerClaimDefectDesc": "VARCHAR(20)",
+        "CustomerClaimDefectWeight": "INT",
+        "NASIdentifiedDefect": "INT",
+        "NASIdentifiedDefectDesc": "VARCHAR(20)",
+        "NASIdentifiedDefectWeight": "INT",
+        "AreaofResponsibilityDefect": "VARCHAR(20)",
+        "AreaofResponsibilityDefectDesc": "VARCHAR(20)",
+        "AreaofResponsibilityDefectWeight": "INT",
+        "CustomerDefectOrigin": "CHAR",
+        "CustomerDefectGroup": "VARCHAR(20)",
+        "CustomerDefectGroupDesc": "VARCHAR(20)",
+        "TotalReturnInventoryWeight": "INT",
+        "TotalScrapAtCustomerWeight": "INT",
+        "TotalSell3rdPartyWeight": "INT",
+        "TotalCustomerCreditWeight": "INT",
+        "LastInspectionLine": "INT",
+        "LastInspectionMachine": "VARCHAR(20)",
+        "LastInspectedDate": "DATE",
+        "GeneralComment1": "VARCHAR(20)",
+        "GeneralComment2": "VARCHAR(20)",
+        "GeneralComment3": "VARCHAR(20)",
+        "GeneralComment4": "VARCHAR(20)"
+    }
+
+    # Create a new dictionary with only matching key-value pairs
+    matching_columns = {key: value for key, value in mergedCoilsDataColumns.items() if key in df.columns}
+
+    # Print the resulting dictionary
+    print(matching_columns)
+
+    #try:
+    # Create a cursor object to interact with the database
+    cursor = connection.cursor()
+
+    #Truncate table
+    query = "DO $$\
+                BEGIN\
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_coils_data') THEN\
+                    EXECUTE 'TRUNCATE TABLE merged_coils_data';\
+                END IF;\
+            END $$;"
+    cursor.execute(query)
+
+    # Drop table
+    cursor.execute('DROP TABLE IF EXISTS merged_coils_data; COMMIT;')
+
+    # Create a table
+
+    # Initialize an empty string to store the column definitions
+    column_definitions = ""
+
+    # Iterate through the dictionary items
+    for column_name, data_type in mergedCoilsDataColumns.items():
+        # Concatenate the column name and data type
+        column_definitions += f"{column_name} {data_type}"
+
+        # Add a comma if it's not the last item
+        if column_name != list(mergedCoilsDataColumns.keys())[-1]:
+            column_definitions += ", "
+
+    # Print the resulting column definitions string
+    #print(column_definitions)
+
+    cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data ({}); COMMIT;'.format(column_definitions))
+    
+    cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+    result = cursor.fetchall()
+    print(result)
+
+    # Insert into merged_coils_data table
+    for index, row in df.iterrows():
+        insert_query = f"INSERT INTO merged_coils_data (%s) VALUES (%s, %s, %s);"
+        cursor.execute(insert_query, (mergedCoilsDataColumns.keys, row['column1'], row['column2'], row['column3']))
+
+    cursor.execute('SELECT * from merged_coils_data')
+    result = cursor.fetchall()
+    print(result)
+
+
+    # Close the connection
+    connection.close()
+
+    print("Success")
+
+    #except:
+        #print("Failure")
 
 def cleanPTechCoilsData(df):
     # Print observations before
@@ -353,4 +554,7 @@ if flag:
     #cleanFlInspectionMappedDefectsData(dataframeList[4])
     #cleanFlInspectionProcessesData(dataframeList[5])
     cleanedDataframeList = cleanData(dataframeList)
-    mergeDatasets(cleanedDataframeList)
+    mergedDataframeList = mergeDatasets(cleanedDataframeList)
+    connection = dbConnect(credentials)
+    #testConnection(connection)
+    exportToDatabase(connection, mergedDataframeList)

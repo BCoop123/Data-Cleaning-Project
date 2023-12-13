@@ -40,7 +40,7 @@ def cleanPTechCoilsData(df):
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
     # Drop the 'isActive' column as all the value is 1 in the dataset
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -61,7 +61,7 @@ def cleanPTechCoilsData(df):
     df = df[df["Weight"] > 0]
 
     #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -107,7 +107,7 @@ def cleanDefectMapsData(df):
     df = df[df["SizeMD"] > 0]
 
     # Drop the 'isActive' column as all the value is 1 in the dataset
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -160,7 +160,7 @@ def cleanClaimsData(df):
     df = df[df["OriginalShippedWeight"] > 0]
 
     # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -206,7 +206,7 @@ def cleanFlInspectionCommentsData(df):
         df.drop(['ChangeTime'], axis=1, inplace=True)
 
     # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -241,7 +241,7 @@ def cleanFlInspectionMappedDefectsData(df):
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
     # check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -287,7 +287,7 @@ def cleanFlInspectionProcessesData(df):
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
     #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -330,7 +330,7 @@ def cleanFlInspectionData(df):
     df.drop(['InspectionDate', 'InspectionTime'], axis=1, inplace=True)
 
     #check if the columns has null or same values in the entire row
-    columns_to_drop = df.columns[df.nunique() == 1]
+    columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
@@ -406,17 +406,17 @@ def getData():
 
 # Merge datasets given the names, joinCondition, and joinType
 def mergeDatasets(dataframeList):
-    #try:
+    try:
         mergedDataframeList = []
 
         df = pd.merge(dataframeList[0], dataframeList[1], how='outer')
         df = pd.merge(df, dataframeList[2], how='outer')
-        df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
+        df.to_csv('./Datasets/mergedDatasets/mergedCoilsData.csv', index=False)
 
         df1 = pd.merge(dataframeList[6], dataframeList[5], how='outer')
         df1 = pd.merge(df1, dataframeList[3], how='outer')
         df1 = pd.merge(df1, dataframeList[4], how='outer')
-        df1.to_csv('./Datasets/mergedInspectionData.csv', index=False)
+        df1.to_csv('./Datasets/mergedDatasets/mergedInspectionData.csv', index=False)
 
         df.drop_duplicates()
         
@@ -425,7 +425,7 @@ def mergeDatasets(dataframeList):
         #print(df.columns)
 
         return mergedDataframeList
-    #except:
+    except:
         print("Failed to merge datasets.")
 
 
@@ -574,75 +574,75 @@ def exportCoilsData(connection, df):
     mergedCoilsDataColumns = {key: value for key, value in mergedCoilsDataColumns.items() if key in df.columns}
 
 
-    #try:
-    # Create a cursor object to interact with the database
-    cursor = connection.cursor()
+    try:
+        # Create a cursor object to interact with the database
+        cursor = connection.cursor()
 
-    #Truncate table
-    query = "DO $$\
-                BEGIN\
-                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_coils_data') THEN\
-                    EXECUTE 'TRUNCATE TABLE merged_coils_data';\
-                END IF;\
-            END $$;"
-    cursor.execute(query)
+        #Truncate table
+        query = "DO $$\
+                    BEGIN\
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_coils_data') THEN\
+                        EXECUTE 'TRUNCATE TABLE merged_coils_data';\
+                    END IF;\
+                END $$;"
+        cursor.execute(query)
 
-    # Drop table
-    cursor.execute('DROP TABLE IF EXISTS merged_coils_data; COMMIT;')
+        # Drop table
+        cursor.execute('DROP TABLE IF EXISTS merged_coils_data; COMMIT;')
 
-    # Create a table
+        # Create a table
 
-    # Initialize an empty string to store the column definitions
-    column_definitions = ""
+        # Initialize an empty string to store the column definitions
+        column_definitions = ""
 
-    # Iterate through the dictionary items
-    for column_name, data_type in mergedCoilsDataColumns.items():
-        # Concatenate the column name and data type
-        column_definitions += f"{column_name} {data_type}"
+        # Iterate through the dictionary items
+        for column_name, data_type in mergedCoilsDataColumns.items():
+            # Concatenate the column name and data type
+            column_definitions += f"{column_name} {data_type}"
 
-        # Add a comma if it's not the last item
-        if column_name != list(mergedCoilsDataColumns.keys())[-1]:
-            column_definitions += ", "
+            # Add a comma if it's not the last item
+            if column_name != list(mergedCoilsDataColumns.keys())[-1]:
+                column_definitions += ", "
 
-    cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data ({}); COMMIT;'.format(column_definitions))
-    
-    cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
-    result = cursor.fetchall()
-    print(result)
-
-    # Insert into merged_coils_data table
-    count = 0
-
-    columns_str = ', '.join(map(str, df.columns))
-
-    for index, row in df.iterrows():
-        values = []
-        for value in row:
-            if pd.isnull(value):
-                values.append('NULL')
-            elif isinstance(value, (int, float)):
-                values.append(str(value))
-            elif isinstance(value, str):
-                values.append(f"'{value}'")
-            else:
-                values.append(str(value))  # Add additional handling for other data types if needed
+        cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data ({}); COMMIT;'.format(column_definitions))
         
-        values_str = ', '.join(values)
-        
-        insert_query = f"INSERT INTO merged_coils_data ({columns_str}) VALUES ({values_str});"
-        cursor.execute(insert_query)
+        cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+        result = cursor.fetchall()
+        print(result)
 
-        count += 1
-        print(count)
+        # Insert into merged_coils_data table
+        count = 0
+
+        columns_str = ', '.join(map(str, df.columns))
+
+        for index, row in df.iterrows():
+            values = []
+            for value in row:
+                if pd.isnull(value):
+                    values.append('NULL')
+                elif isinstance(value, (int, float)):
+                    values.append(str(value))
+                elif isinstance(value, str):
+                    values.append(f"'{value}'")
+                else:
+                    values.append(str(value))  # Add additional handling for other data types if needed
+            
+            values_str = ', '.join(values)
+            
+            insert_query = f"INSERT INTO merged_coils_data ({columns_str}) VALUES ({values_str});"
+            cursor.execute(insert_query)
+
+            count += 1
+            print(count)
 
 
-    # Close the connection
-    connection.commit()
+        # Close the connection
+        connection.commit()
 
-    print("Success")
+        print("Success")
 
-    #except:
-        #print("Failure")
+    except:
+        print("Failure")
 
 def exportInspectionData(connection, df):
 
@@ -750,8 +750,8 @@ def exportInspectionData(connection, df):
         'QualityDescription': 'VARCHAR(256)',
         'SideDescription': 'CHAR(10)',
         'InspectionProcessID': 'INT',
-        'FlatCoilID': 'INT',
-        'CoilNumber': 'VARCHAR(30)',
+        'CoilId': 'INT',
+        'BdeCoilId': 'VARCHAR(30)',
         'LineID': 'INT',
         'ProcessStartTime': 'TIME',
         'InspectionStartTime': 'TIME',
@@ -921,10 +921,14 @@ def detectErrors():
         flag = False
         print("Need to create a folder for Datasets.")
         
+    else:      
+        if not os.path.exists('./Datasets/cleanedDatasets'):
+            print("Created a folder for Cleaned Datasets.")
+            os.makedirs('./Datasets/cleanedDatasets')
 
-    if not os.path.exists('./Datasets/cleanedDatasets'):
-        print("Created a folder for Cleaned Datasets.")
-        os.makedirs('./Datasets/cleanedDatasets')
+        if not os.path.exists('./Datasets/mergedDatasets'):
+            print("Created a folder for Merged Datasets.")
+            os.makedirs('./Datasets/mergedDatasets')
 
     # check if db.conf file exit
     if not os.path.exists('./db.conf'):
@@ -1020,6 +1024,7 @@ def main():
         exportInspectionData(connection, mergedDataframeList[1])
 
         # Close the connection
-        connection.close()
+        if connection:
+            connection.close()
         
 main()

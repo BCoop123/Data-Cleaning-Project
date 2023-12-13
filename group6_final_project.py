@@ -319,6 +319,7 @@ def cleanFlInspectionData(df):
     df.rename(columns={"CurrentGuage": "CurrentGauge"}, inplace=True)
     df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
     df.rename(columns={"ColdAPGuage": "ColdAPGauge"}, inplace=True)
+    df.rename(columns={"ExitCoilNumber": "BdeCoilId"}, inplace=True)
 
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)

@@ -25,6 +25,13 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
+
+# Download nltk resources (run only once)
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('stopwords')
+
+
 #========================================================================
 # Data Cleaning Functions
 #========================================================================
@@ -971,7 +978,7 @@ def NLP():
     nltk.download('stopwords')
 
     # Load the CSV file
-    file_path = 'FLInspectionComments.csv'
+    file_path = 'Datasets/FLInspectionComments.csv'
     df = pd.read_csv(file_path)
 
     # Check the structure of your DataFrame
@@ -979,14 +986,14 @@ def NLP():
 
     # Spell Check, Tokenization, Lemmatization, and Stopword Removal
     lemmatizer = WordNetLemmatizer()
-    spell = SpellChecker()
+    # spell = SpellChecker()
     stop_words = set(stopwords.words('english'))
 
     def process_text(text):
         # Spell check
         tokens = word_tokenize(str(text))
-        corrected_tokens = [spell.correction(token) for token in tokens]
-        # corrected_tokens = [token for token in tokens]
+        # corrected_tokens = [spell.correction(token) for token in tokens]
+        corrected_tokens = [token for token in tokens]
 
         # Lemmatization with handling None type
         lemmatized_tokens = [lemmatizer.lemmatize(token) if token is not None else '' for token in corrected_tokens]
@@ -1000,7 +1007,7 @@ def NLP():
     df['Comments_processed'] = df['Comment'].apply(process_text)
 
     # Save the DataFrame with the new column
-    output_file_path = 'FLInspectionComments_Processed.csv'
+    output_file_path = 'Datasets/FLInspectionComments_Processed.csv'
     df[['FLInspectionCommentID', 'Comments_processed']].to_csv(output_file_path, index=False)
 
 
@@ -1017,7 +1024,7 @@ def main():
     if flag:
 
         dataframeList = getData()
-        NLP=NLP()
+        NLP()
         cleanedDataframeList = cleanData(dataframeList)
         mergedDataframeList = mergeDatasets(cleanedDataframeList)
         connection = dbConnect(credentials)

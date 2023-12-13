@@ -185,6 +185,10 @@ def cleanFlInspectionCommentsData(df):
     # Print observations before
     print(df.shape)
 
+    df = df[df["FLInspectionCommentID"] != '']
+    df = df[df["FLInspectionCommentID"] != None]
+    df = df[df["FLInspectionID"] != '']
+    df = df[df["FLInspectionID"] != None]
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
@@ -227,6 +231,9 @@ def cleanFlInspectionMappedDefectsData(df):
     # Rename columns
     df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
 
+    df = df[df["FLInspectionID"] != '']
+    df = df[df["FLInspectionID"] != None]
+
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
@@ -264,6 +271,14 @@ def cleanFlInspectionProcessesData(df):
 
     # Rename columns
     df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
+    df.rename(columns={"FlatCoilID": "CoilId"}, inplace=True)
+    df.rename(columns={"CoilNumber": "BdeCoilId"}, inplace=True)
+
+    # detect if both are empty, null, or NAN.
+    df = df[df["CoilId"] != df["BdeCoilId"]]
+
+    df = df[df["FLInspectionID"] != '']
+    df = df[df["FLInspectionID"] != None]
 
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
@@ -296,7 +311,10 @@ def cleanFlInspectionProcessesData(df):
 def cleanFlInspectionData(df):
     # Print observations before
     print(df.shape)
-    
+
+    df = df[df["FLInspectionID"] != '']
+    df = df[df["FLInspectionID"] != None]
+
     # Rename columns that were spelled incorrectly
     df.rename(columns={"CurrentGuage": "CurrentGauge"}, inplace=True)
     df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
@@ -391,25 +409,12 @@ def mergeDatasets(dataframeList):
     #try:
         mergedDataframeList = []
 
-        # Join PTechCoilsData and DefectMapsData
-        # When joining pTechCoilsData with claimsData there are no claims associated with any of the coils
-        # given and no claims associated with any of the defects given
-
-        # on='CoilId'
         df = pd.merge(dataframeList[0], dataframeList[1], how='outer')
-        #left_on='BdeCoilId', right_on='ProductIdentification1'
-        #print(df.columns)
-        #print(dataframeList[2].columns)
         df = pd.merge(df, dataframeList[2], how='outer')
-        
         df.to_csv('./Datasets/mergedCoilsData.csv', index=False)
 
-        # Join FlInspectionData and FlInspectionProcessesData
-        #left_on='FLInspectionID', right_on='InspectionProcessID',
         df1 = pd.merge(dataframeList[6], dataframeList[5], how='outer')
-        #on='FLInspectionID', 
         df1 = pd.merge(df1, dataframeList[3], how='outer')
-        #right_on='InspectionProcessID', left_on='FLInspectionID'
         df1 = pd.merge(df1, dataframeList[4], how='outer')
         df1.to_csv('./Datasets/mergedInspectionData.csv', index=False)
 
@@ -440,40 +445,10 @@ def dbConnect(credentials):
         )
 
         return connection
-        
+
     except:
         print("Failed to connect to database.")
 
-def testConnection(connection):
-    try:
-        # Create a cursor object to interact with the database
-        cursor = connection.cursor()
-
-        #Truncate table
-        query = 'TRUNCATE merged_coils_data; COMMIT;'
-        cursor.execute(query)
-
-        # Drop table
-        cursor.execute('DROP TABLE IF EXISTS merged_coils_data; COMMIT;')
-
-        # Create a table
-        cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data (defect_id int PRIMARY KEY, name varchar(30)); COMMIT;')
-        
-        cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
-        result = cursor.fetchall()
-        print(result)
-
-        # Insert into tableVARCHAR(2
-        cursor.execute('INSERT INTO merged_coils_data (defect_id, name) VALUES (123, \'test\')')
-
-        cursor.execute('SELECT * from merged_coils_data')
-        result = cursor.fetchall()
-        print(result)
-
-        print("Success")
-
-    except:
-        print("Failure")
 
 def exportCoilsData(connection, df):
 
@@ -487,7 +462,7 @@ def exportCoilsData(connection, df):
         "Width": "INT",
         "Thickness": "DECIMAL",
         "Weight": "INT",
-        "Charge": "VARCHAR(30)",  # Data Type not provided
+        "Charge": "VARCHAR(30)",
         "MaterialId": "INT",
         "Status": "CHAR(10)",
         "BdeCoilId": "VARCHAR(30)",
@@ -598,8 +573,6 @@ def exportCoilsData(connection, df):
     # Create a new dictionary with only matching key-value pairs
     mergedCoilsDataColumns = {key: value for key, value in mergedCoilsDataColumns.items() if key in df.columns}
 
-    # Print the resulting dictionary
-    #print(mergedCoilsDataColumns)
 
     #try:
     # Create a cursor object to interact with the database
@@ -631,9 +604,6 @@ def exportCoilsData(connection, df):
         if column_name != list(mergedCoilsDataColumns.keys())[-1]:
             column_definitions += ", "
 
-    # Print the resulting column definitions string
-    #print(column_definitions)
-
     cursor.execute('CREATE TABLE IF NOT EXISTS merged_coils_data ({}); COMMIT;'.format(column_definitions))
     
     cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
@@ -658,19 +628,12 @@ def exportCoilsData(connection, df):
                 values.append(str(value))  # Add additional handling for other data types if needed
         
         values_str = ', '.join(values)
-        #print(columns_str)
-        #print(values_str)
         
         insert_query = f"INSERT INTO merged_coils_data ({columns_str}) VALUES ({values_str});"
         cursor.execute(insert_query)
 
         count += 1
         print(count)
-
-    #SELECT from merged_coils_data
-    #cursor.execute('SELECT * from merged_coils_data')
-    #result = cursor.fetchall()
-    #print(result)
 
 
     # Close the connection
@@ -865,11 +828,6 @@ def exportInspectionData(connection, df):
 
     # Create a new dictionary with only matching key-value pairs
     mergedInspectionDataColumns = {key: value for key, value in mergedInspectionDataColumns.items() if key in df.columns}
-    #print(mergedInspectionDataColumns)
-    #print(list(df.columns))
-
-    # Print the resulting dictionary
-    #print(mergedinspectionDataColumns)
 
     #try:
     # Create a cursor object to interact with the database
@@ -901,8 +859,6 @@ def exportInspectionData(connection, df):
         if column_name != list(mergedInspectionDataColumns.keys())[-1]:
             column_definitions += ", "
 
-    # Print the resulting column definitions string
-    #print(column_definitions)
 
     cursor.execute('CREATE TABLE IF NOT EXISTS merged_inspection_data ({}); COMMIT;'.format(column_definitions))
     
@@ -937,11 +893,6 @@ def exportInspectionData(connection, df):
         count += 1
         print(count)
 
-    #SELECT from merged_inspection_data
-    #cursor.execute('SELECT * from merged_inspection_data')
-    #result = cursor.fetchall()
-    #print(result)
-
 
     # Commit
     connection.commit()
@@ -965,13 +916,7 @@ def detectErrors():
     # Initilize database credentials
     credentials = []
 
-    host = ""
-    database = ""
-    port = ""
-    user = ""
-    password = ""
-
-    #check if datasets file exit
+    # check if datasets file exit
     if not os.path.exists('./Datasets'):
         flag = False
         print("Need to create a folder for Datasets.")
@@ -981,17 +926,17 @@ def detectErrors():
         print("Created a folder for Cleaned Datasets.")
         os.makedirs('./Datasets/cleanedDatasets')
 
-    #check if db.conf file exit
+    # check if db.conf file exit
     if not os.path.exists('./db.conf'):
         flag = False
         print("Need to create a file name db.conf with credentials.")
     else:
 
         try:
-            # creat an instance of the parser
+            # create an instance of the parser
             confP = cp.ConfigParser()
 
-            # read in the ini or configuration file
+            # read in the configuration file
             confP.read(["db.conf"])
 
             host = confP.get("db", "url")
@@ -1024,25 +969,9 @@ def main():
     if flag:
 
         dataframeList = getData()
-        #mergeDatasets(dataframeList)
-        
-        #print(dataframeList[0].head())
-        
-        # Test connecting to the database
-        #print(credentials)
-        #connection = dbConnect(credentials)
-        #testConnection(connection)
-
-        #cleanPTechCoilsData(dataframeList[0])
-        #cleanDefectMapsData(dataframeList[1])
-        #cleanClaimsData(dataframeList[2])
-        #cleanFlInspectionCommentsData([3])
-        #cleanFlInspectionMappedDefectsData(dataframeList[4])
-        #cleanFlInspectionProcessesData(dataframeList[5])
         cleanedDataframeList = cleanData(dataframeList)
         mergedDataframeList = mergeDatasets(cleanedDataframeList)
         connection = dbConnect(credentials)
-        #testConnection(connection)
         exportCoilsData(connection, mergedDataframeList[0])
         exportInspectionData(connection, mergedDataframeList[1])
 

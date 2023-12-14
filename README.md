@@ -77,3 +77,32 @@ structure will be provided in due course.
 rubric will be provided in due course
 
 ## Configuration
+
+Datasets
+
+The datasets required for this program were provided by Stainless Steel Company X. The 
+datasets must be included in a folder named Datasets that should be created in the project 
+folder.
+
+![Image of Datasets Folder](image.png)
+
+The datasets must be named exactly as they are named in the program and must contain all the
+same columns and data types/sizes.
+
+
+Configuration File
+
+In order to connect to the database you will need to create a file named db.conf. This file
+should contain the following section and information:
+
+[db]
+url=your_db_servers_ip_address
+database=your_database_name
+dbuser=your_database_user
+dbpassword=your_database_password
+port=your_port
+
+The resulting cleaned, merged, and lemmatized datasets can be found in the folders 
+cleanedDatasets, mergedDatasets, and lemmatizedComments respectivly.
+
+![Image of Resulting Folders](image-1.png)

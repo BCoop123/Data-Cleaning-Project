@@ -82,12 +82,13 @@ def cleanPTechCoilsData(df):
     # Fix capitilization issues
     df['BdeCoilId'] = df['BdeCoilId'].apply(lambda x: x.upper() if isinstance(x, str) else x)
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
 
      # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -125,12 +126,12 @@ def cleanDefectMapsData(df):
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
-
      # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -145,14 +146,14 @@ def cleanClaimsData(df):
     # Print observations before
     print(df.shape)
 
-    # Rename columns
-    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
-
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
     # Remove more than one spaces in a row
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    # Rename columns
+    df.rename(columns={"ProductIdentification1": "BdeCoilId"}, inplace=True)
 
     # empty, null
     df = df[df["BdeCoilId"] != '']
@@ -178,12 +179,13 @@ def cleanClaimsData(df):
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
 
     # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -198,15 +200,16 @@ def cleanFlInspectionCommentsData(df):
     # Print observations before
     print(df.shape)
 
-    df = df[df["FLInspectionCommentID"] != '']
-    df = df[df["FLInspectionCommentID"] != None]
-    df = df[df["FLInspectionID"] != '']
-    df = df[df["FLInspectionID"] != None]
     # Remove leading and trailing spaces
     df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
     # Remove more than one spaces in a row
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
+    df = df[df["FLInspectionCommentID"] != '']
+    df = df[df["FLInspectionCommentID"] != None]
+    df = df[df["FLInspectionID"] != '']
+    df = df[df["FLInspectionID"] != None]
 
     # Drop the below columns if they have the same values for all rows
     if (df['ChangeProgram'] == df['CreateProgram']).all():
@@ -228,6 +231,9 @@ def cleanFlInspectionCommentsData(df):
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
 
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+
     # Print observations after
     print(df.shape)
 
@@ -241,17 +247,20 @@ def cleanFlInspectionMappedDefectsData(df):
     # Print observations before
     print(df.shape)
 
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
     # Rename columns
     df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
 
     df = df[df["FLInspectionID"] != '']
     df = df[df["FLInspectionID"] != None]
 
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
+    df = df.loc[df["Length"] > 0]
 
     # check if the columns has null or same values in the entire row
     columns_to_drop = df.columns[df.nunique() <= 1]
@@ -259,15 +268,13 @@ def cleanFlInspectionMappedDefectsData(df):
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
-    # Drop records where length is 0 or < 0. Length less than 0 is not possible for a defect.
-    df = df.loc[df["Length"] > 0]
-
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
 
      # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -282,7 +289,12 @@ def cleanFlInspectionProcessesData(df):
     # Print observations before
     print(df.shape)
 
-    # Rename columns
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
     df.rename(columns={"InspectionProcessID": "FLInspectionID"}, inplace=True)
     df.rename(columns={"FlatCoilID": "CoilId"}, inplace=True)
     df.rename(columns={"CoilNumber": "BdeCoilId"}, inplace=True)
@@ -293,24 +305,19 @@ def cleanFlInspectionProcessesData(df):
     df = df[df["FLInspectionID"] != '']
     df = df[df["FLInspectionID"] != None]
 
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
-
     #check if the columns has null or same values in the entire row
     columns_to_drop = df.columns[df.nunique() <= 1]
 
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
-    # Remove duplicate rows
-    df.drop_duplicates(inplace=True)
 
      # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -325,6 +332,12 @@ def cleanFlInspectionData(df):
     # Print observations before
     print(df.shape)
 
+    # Remove leading and trailing spaces
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # Remove more than one spaces in a row
+    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
+
     df = df[df["FLInspectionID"] != '']
     df = df[df["FLInspectionID"] != None]
 
@@ -333,12 +346,6 @@ def cleanFlInspectionData(df):
     df.rename(columns={"HotAPGuage": "HotAPGauge"}, inplace=True)
     df.rename(columns={"ColdAPGuage": "ColdAPGauge"}, inplace=True)
     df.rename(columns={"ExitCoilNumber": "BdeCoilId"}, inplace=True)
-
-    # Remove leading and trailing spaces
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Remove more than one spaces in a row
-    df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
     # Drop redundant and repeated columns
     df.drop(['InspectionDate', 'InspectionTime'], axis=1, inplace=True)
@@ -349,12 +356,12 @@ def cleanFlInspectionData(df):
     #drop those columns that has null or same values in the entire row
     df = df.drop(columns=columns_to_drop)
 
-    # a lot of duplicates data in this datasets (More than 50% data are duplicates) drop the duplications
-    df = df.drop_duplicates()
-
      # Escape ' character
     string_columns = df.select_dtypes(include='object').columns
     df[string_columns] = df[string_columns].replace({r"'": ""}, regex=True)
+
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
     # Print observations after
     print(df.shape)
@@ -436,7 +443,10 @@ def mergeDatasets(dataframeList):
         df1 = pd.merge(df1, dataframeList[4], how='outer')
         df1.to_csv('./Datasets/mergedDatasets/mergedInspectionData.csv', index=False)
 
-        df.drop_duplicates()
+        # Remove duplicate rows
+        df.drop_duplicates(inplace=True)
+        # Remove duplicate rows
+        df1.drop_duplicates(inplace=True)
         
         mergedDataframeList.append(df)
         mergedDataframeList.append(df1)
@@ -745,16 +755,8 @@ def exportInspectionData(connection, df):
         'HAPYield': 'DECIMAL(4,3)',
         'CutLineYield': 'DECIMAL(4,3)',
         'AccumulatedEfficiency': 'DECIMAL(4,3)',
-        'CreateProgram': 'NCHAR(10)',
-        'CreateDate': 'INT',
-        'CreateTime': 'INT',
-        'ChangeProgram': 'NCHAR(10)',
-        'ChangeDate': 'INT',
-        'ChangeTime': 'INT',
-        'isActive': 'INT',
         'InspectionDateTime': 'VARCHAR(30)',
         'InspectionMappedDefectID': 'INT',
-        'InspectionProcessID': 'INT',
         'DefectCodeID': 'INT',
         'SideID': 'INT',
         'FaceID': 'INT',
@@ -770,7 +772,6 @@ def exportInspectionData(connection, df):
         'InspectionProcessID': 'INT',
         'CoilId': 'INT',
         'BdeCoilId': 'VARCHAR(30)',
-        'LineID': 'INT',
         'ProcessStartTime': 'TIME',
         'InspectionStartTime': 'TIME',
         'InspectionEndTime': 'TIME',

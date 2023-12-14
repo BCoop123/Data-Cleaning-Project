@@ -1,25 +1,36 @@
 #========================================================================
-# Author: Final Project Group 6
+# Authors: Final Project Group 6 - Abhishek Shrestha, Brandon Cooper, &
+# Nathan Reed
 #
 # Python Version: 3.12.0 64-bit
 #
 # Course: DSC 200
 #
-# Assignment: Project 1
+# Assignment: Final Project
+#
+# *************************** IMPORTANT *********************************
+# 
+# Please see README.md for cofiguration information for this program!
+#
+# ***********************************************************************
 #
 # Purpose:
 #
-# TODO
+# The objective of this project is to develop a Python application for
+# collecting and preprocessing data pertaining to production flaws at
+# Stainless Steel Company X, a stainless-steel manufacturing company.
+# The data originates from automated systems, employee observations, and
+# customer claims. The project aims to consolidate datasets, perform
+# comprehensive cleaning tasks, and upload the cleaned data to a
+# designated database.
 #
-# Date Submitted: TODO
+# Date Submitted: 12/13/2023
 #========================================================================
 
 import pandas as pd
 import os
 import configparser as cp
-#import sqlite3
 import psycopg2
-import re
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords

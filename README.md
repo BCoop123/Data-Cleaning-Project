@@ -75,3 +75,5 @@ structure will be provided in due course.
 3. PowerPoint presentation for the final presentation
 4. A peer review of the other teams; work. This will be due after each presentation. The
 rubric will be provided in due course
+
+## Configuration

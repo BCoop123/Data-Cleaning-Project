@@ -24,6 +24,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+#import spellchecker
 
 #========================================================================
 # Data Cleaning Functions
@@ -357,15 +358,19 @@ def cleanFlInspectionData(df):
 def cleanData(dataframeList):
     cleanedDataframeList = []
     
-    cleanedDataframeList.append(cleanPTechCoilsData(dataframeList[0]))
-    cleanedDataframeList.append(cleanDefectMapsData(dataframeList[1]))
-    cleanedDataframeList.append(cleanClaimsData(dataframeList[2]))
-    cleanedDataframeList.append(cleanFlInspectionCommentsData(dataframeList[3]))
-    cleanedDataframeList.append(cleanFlInspectionMappedDefectsData(dataframeList[4]))
-    cleanedDataframeList.append(cleanFlInspectionProcessesData(dataframeList[5]))
-    cleanedDataframeList.append(cleanFlInspectionData(dataframeList[6]))
+    try:
+        cleanedDataframeList.append(cleanPTechCoilsData(dataframeList[0]))
+        cleanedDataframeList.append(cleanDefectMapsData(dataframeList[1]))
+        cleanedDataframeList.append(cleanClaimsData(dataframeList[2]))
+        cleanedDataframeList.append(cleanFlInspectionCommentsData(dataframeList[3]))
+        cleanedDataframeList.append(cleanFlInspectionMappedDefectsData(dataframeList[4]))
+        cleanedDataframeList.append(cleanFlInspectionProcessesData(dataframeList[5]))
+        cleanedDataframeList.append(cleanFlInspectionData(dataframeList[6]))
 
-    return cleanedDataframeList
+        return cleanedDataframeList
+    
+    except:
+        print('Failed to clean data.')
 
 
 
@@ -643,7 +648,7 @@ def exportCoilsData(connection, df):
         print("Success")
 
     except:
-        print("Failure")
+        print("Database operation failure for merged_coils_data")
 
 def exportInspectionData(connection, df):
 
@@ -830,78 +835,159 @@ def exportInspectionData(connection, df):
     # Create a new dictionary with only matching key-value pairs
     mergedInspectionDataColumns = {key: value for key, value in mergedInspectionDataColumns.items() if key in df.columns}
 
-    #try:
-    # Create a cursor object to interact with the database
-    cursor = connection.cursor()
+    try:
+        # Create a cursor object to interact with the database
+        cursor = connection.cursor()
 
-    #Truncate table
-    query = "DO $$\
-                BEGIN\
-                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_inspection_data') THEN\
-                    EXECUTE 'TRUNCATE TABLE merged_inspection_data';\
-                END IF;\
-            END $$;"
-    cursor.execute(query)
+        #Truncate table
+        query = "DO $$\
+                    BEGIN\
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'merged_inspection_data') THEN\
+                        EXECUTE 'TRUNCATE TABLE merged_inspection_data';\
+                    END IF;\
+                END $$;"
+        cursor.execute(query)
 
-    # Drop table
-    cursor.execute('DROP TABLE IF EXISTS merged_inspection_data; COMMIT;')
+        # Drop table
+        cursor.execute('DROP TABLE IF EXISTS merged_inspection_data; COMMIT;')
 
-    # Create a table
+        # Create a table
 
-    # Initialize an empty string to store the column definitions
-    column_definitions = ""
+        # Initialize an empty string to store the column definitions
+        column_definitions = ""
 
-    # Iterate through the dictionary items
-    for column_name, data_type in mergedInspectionDataColumns.items():
-        # Concatenate the column name and data type
-        column_definitions += f"{column_name} {data_type}"
+        # Iterate through the dictionary items
+        for column_name, data_type in mergedInspectionDataColumns.items():
+            # Concatenate the column name and data type
+            column_definitions += f"{column_name} {data_type}"
 
-        # Add a comma if it's not the last item
-        if column_name != list(mergedInspectionDataColumns.keys())[-1]:
-            column_definitions += ", "
+            # Add a comma if it's not the last item
+            if column_name != list(mergedInspectionDataColumns.keys())[-1]:
+                column_definitions += ", "
 
 
-    cursor.execute('CREATE TABLE IF NOT EXISTS merged_inspection_data ({}); COMMIT;'.format(column_definitions))
-    
-    cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
-    result = cursor.fetchall()
-    print(result)
-
-    # Insert into merged_inspection_data table
-    count = 0
-
-    columns_str = ', '.join(map(str, df.columns))
-
-    for index, row in df.iterrows():
-        values = []
-        for value in row:
-            if pd.isnull(value):
-                values.append('NULL')
-            elif isinstance(value, (int, float)):
-                values.append(str(value))
-            elif isinstance(value, str):
-                values.append(f"'{value}'")
-            else:
-                values.append(str(value))  # Add additional handling for other data types if needed
+        cursor.execute('CREATE TABLE IF NOT EXISTS merged_inspection_data ({}); COMMIT;'.format(column_definitions))
         
-        values_str = ', '.join(values)
-        #print(columns_str)
-        #print(values_str)
+        cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+        result = cursor.fetchall()
+        print(result)
+
+        # Insert into merged_inspection_data table
+        count = 0
+
+        columns_str = ', '.join(map(str, df.columns))
+
+        for index, row in df.iterrows():
+            values = []
+            for value in row:
+                if pd.isnull(value):
+                    values.append('NULL')
+                elif isinstance(value, (int, float)):
+                    values.append(str(value))
+                elif isinstance(value, str):
+                    values.append(f"'{value}'")
+                else:
+                    values.append(str(value))  # Add additional handling for other data types if needed
+            
+            values_str = ', '.join(values)
+            #print(columns_str)
+            #print(values_str)
+            
+            insert_query = f"INSERT INTO merged_inspection_data ({columns_str}) VALUES ({values_str});"
+            cursor.execute(insert_query)
+
+            count += 1
+            print(count)
+
+
+        # Commit
+        connection.commit()
+
+        print("Success")
+
+    except:
+        print("Database operation failure for merged_inspection_data")
+
+def exportLemmatizedComments(connection, df):
+
+    mergedCoilsDataColumns = {
+        "FLInspectionCommentID": "INT",
+        "Comments_processed": "VARCHAR(256)",
+    }
+
+    # Create a new dictionary with only matching key-value pairs
+    mergedCoilsDataColumns = {key: value for key, value in mergedCoilsDataColumns.items() if key in df.columns}
+
+
+    try:
+        # Create a cursor object to interact with the database
+        cursor = connection.cursor()
+
+        #Truncate table
+        query = "DO $$\
+                    BEGIN\
+                    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'lemmatized_comments') THEN\
+                        EXECUTE 'TRUNCATE TABLE merged_coils_data';\
+                    END IF;\
+                END $$;"
+        cursor.execute(query)
+
+        # Drop table
+        cursor.execute('DROP TABLE IF EXISTS lemmatized_comments; COMMIT;')
+
+        # Create a table
+
+        # Initialize an empty string to store the column definitions
+        column_definitions = ""
+
+        # Iterate through the dictionary items
+        for column_name, data_type in mergedCoilsDataColumns.items():
+            # Concatenate the column name and data type
+            column_definitions += f"{column_name} {data_type}"
+
+            # Add a comma if it's not the last item
+            if column_name != list(mergedCoilsDataColumns.keys())[-1]:
+                column_definitions += ", "
+
+        cursor.execute('CREATE TABLE IF NOT EXISTS lemmatized_comments ({}); COMMIT;'.format(column_definitions))
         
-        insert_query = f"INSERT INTO merged_inspection_data ({columns_str}) VALUES ({values_str});"
-        cursor.execute(insert_query)
+        cursor.execute('SELECT * from information_schema.tables WHERE table_schema=\'public\'')
+        result = cursor.fetchall()
+        print(result)
 
-        count += 1
-        print(count)
+        # Insert into merged_coils_data table
+        count = 0
+
+        columns_str = ', '.join(map(str, df.columns))
+
+        for index, row in df.iterrows():
+            values = []
+            for value in row:
+                if pd.isnull(value):
+                    values.append('NULL')
+                elif isinstance(value, (int, float)):
+                    values.append(str(value))
+                elif isinstance(value, str):
+                    values.append(f"'{value}'")
+                else:
+                    values.append(str(value))  # Add additional handling for other data types if needed
+            
+            values_str = ', '.join(values)
+            
+            insert_query = f"INSERT INTO lemmatized_comments ({columns_str}) VALUES ({values_str});"
+            cursor.execute(insert_query)
+
+            count += 1
+            print(count)
 
 
-    # Commit
-    connection.commit()
+        # Close the connection
+        connection.commit()
 
-    print("Success")
+        print("Success")
 
-    #except:
-        #print("Failure")
+    except:
+        print("Database operation failure for lemmatized_comments")
 
 
 
@@ -930,6 +1016,12 @@ def detectErrors():
         if not os.path.exists('./Datasets/mergedDatasets'):
             print("Created a folder for Merged Datasets.")
             os.makedirs('./Datasets/mergedDatasets')
+
+        if not os.path.exists('./Datasets/lemmatizedComments'):
+            print("Created a folder for Lemmatized Comment Data.")
+            os.makedirs('./Datasets/lemmatizedComments')
+
+            
 
     # check if db.conf file exit
     if not os.path.exists('./db.conf'):
@@ -965,43 +1057,50 @@ def detectErrors():
 #========================================================================
 
 def NLP():
-    # Download nltk resources (run only once)
-    nltk.download('punkt')
-    nltk.download('wordnet')
-    nltk.download('stopwords')
+    try:
+        # Download nltk resources (run only once)
+        nltk.download('punkt')
+        nltk.download('wordnet')
+        nltk.download('stopwords')
 
-    # Load the CSV file
-    file_path = 'FLInspectionComments.csv'
-    df = pd.read_csv(file_path)
+        # Load the CSV file
+        file_path = './Datasets/cleanedDatasets/cleanedFlInspectionCommentsData.csv'
+        df = pd.read_csv(file_path)
 
-    # Check the structure of your DataFrame
-    print(df.head())
+        # Check the structure of your DataFrame
+        #print(df.head())
 
-    # Spell Check, Tokenization, Lemmatization, and Stopword Removal
-    lemmatizer = WordNetLemmatizer()
-    spell = SpellChecker()
-    stop_words = set(stopwords.words('english'))
+        # Spell Check, Tokenization, Lemmatization, and Stopword Removal
+        lemmatizer = WordNetLemmatizer()
+        #spell = spellchecker.SpellChecker()
+        stop_words = set(stopwords.words('english'))
 
-    def process_text(text):
-        # Spell check
-        tokens = word_tokenize(str(text))
-        corrected_tokens = [spell.correction(token) for token in tokens]
-        # corrected_tokens = [token for token in tokens]
+        def process_text(text):
+            # Spell check
+            tokens = word_tokenize(str(text))
+            #corrected_tokens = [spell.correction(token) for token in tokens]
+            # corrected_tokens = [token for token in tokens]
 
-        # Lemmatization with handling None type
-        lemmatized_tokens = [lemmatizer.lemmatize(token) if token is not None else '' for token in corrected_tokens]
+            # Lemmatization with handling None type
+            lemmatized_tokens = [lemmatizer.lemmatize(token) if token is not None else '' for token in tokens]
 
-        # Remove stopwords
-        filtered_tokens = [token for token in lemmatized_tokens if token.lower() not in stop_words and token != '']
+            # Remove stopwords
+            filtered_tokens = [token for token in lemmatized_tokens if token.lower() not in stop_words and token != '']
 
-        return ' '.join(filtered_tokens)
+            return ' '.join(filtered_tokens)
 
-    # Apply processing to the 'Comment' column
-    df['Comments_processed'] = df['Comment'].apply(process_text)
+        # Apply processing to the 'Comment' column
+        df['Comments_processed'] = df['Comment'].apply(process_text)
 
-    # Save the DataFrame with the new column
-    output_file_path = 'FLInspectionComments_Processed.csv'
-    df[['FLInspectionCommentID', 'Comments_processed']].to_csv(output_file_path, index=False)
+        # Save the DataFrame with the new column
+        output_file_path = './Datasets/lemmatizedComments/FLInspectionComments_Processed.csv'
+        df[['FLInspectionCommentID', 'Comments_processed']].to_csv(output_file_path, index=False)
+        df = df[['FLInspectionCommentID', 'Comments_processed']]
+
+        return df
+    
+    except:
+        print("Lemmatization Failed")
 
 
 #========================================================================
@@ -1017,12 +1116,13 @@ def main():
     if flag:
 
         dataframeList = getData()
-        NLP=NLP()
         cleanedDataframeList = cleanData(dataframeList)
+        lemmatizedCommentsDataframe = NLP()
         mergedDataframeList = mergeDatasets(cleanedDataframeList)
         connection = dbConnect(credentials)
         exportCoilsData(connection, mergedDataframeList[0])
         exportInspectionData(connection, mergedDataframeList[1])
+        exportLemmatizedComments(connection, lemmatizedCommentsDataframe)
 
         # Close the connection
         if connection:

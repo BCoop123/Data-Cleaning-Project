@@ -46,12 +46,6 @@ def cleanPTechCoilsData(df):
     # Remove more than one spaces in a row
     df.replace(to_replace=r'\s+', value=' ', regex=True, inplace=True)
 
-    # Drop the 'isActive' column as all the value is 1 in the dataset
-    columns_to_drop = df.columns[df.nunique() <= 1]
-
-    #drop those columns that has null or same values in the entire row
-    df = df.drop(columns=columns_to_drop)
-
     # detect if both are empty, null, or NAN.
     df = df[df["CoilId"] != df["BdeCoilId"]]
 

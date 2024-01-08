@@ -2,23 +2,18 @@
 
 ## Overview
 
+Team membership: Brandon, Nathan, Abhishek
 
-This document describes the requirements for the final project for the Fall 2023 DSC 200 Data
-Wrangling class. This is a group project. Any questions relating to the project should be posted
-on the discussion thread specifically created for this project in Canvas.
-Time will be allocated in-class to ensure that students get to ask questions about the project
-and work on these as a team.
+### Project Descriptions
 
+Company A is a stainless-steel manufacturing company. The company has one plant in north
+America with several production lines that produce stainless steel in many different forms. The project
+described below is geared towards improving two of their many business
+processes. For each of these projects, the goal is to design and build a simple Python
+application for collecting and preprocessing (cleaning, preparing, etc.) the data for future data
+analytics work.
 
-Team membership: Between 3 and 4 students per group
-
-Projects: There are two separate projects. Each team is expected to choose just one of the
-projects described below. Note that these are the initial requirements of each of these projects.
-As you meet further with the client, the requirements will be further explained and possibly
-expanded.
-
-
-Deadlines:
+### Deadlines:
 
 1. Form and join a Canvas Project Group – November 16, 2023
 2. Select one of the projects – November 16, 2023
@@ -28,23 +23,10 @@ Deadlines:
 6. Presentation of the project – Final exam day. ( the ppt presentation) The client will be
 present. Evaluation of the work (peer review as well as one from the client)
 
+## Project
 
-Project Descriptions
-
-Company A is a stainless-steel manufacturing company. The company has one plant in north
-America with several production lines that produce stainless steel in many different forms. The
-two projects described below are geared towards improving two of their many business
-processes. For each of these projects, the goal is to design and build a simple Python
-application for collecting and preprocessing (cleaning, preparing, etc.) the data for future data
-analytics work.
-
-
-## Project 1
-
-
-Project 1 relates to the collection of production flaws, etc. that may be observed from three
+This project elates to the collection of production flaws, etc. that may be observed from three
 possible sources:
-
 
 1. An automated system that identifies flaws in production,
 2. Flaws identified by employees that oversee/man the production lines or
@@ -53,7 +35,6 @@ DSC200 Fall 2023 Final Project
 Company A has provided our class section with a set of structured data sets in some 6
 difference CSV files, each of which contains anonymized data which will be required for this
 task. Note that as a result of client consultation the number of datasets might change.
-
 
 Your task is to build a modularized Python application that performs the following tasks:
 
@@ -66,7 +47,6 @@ c. Dealing with missing data, data inconsistency, etc.
 3. Uploading the cleaned data to a designated database. (See the instructor for access to
 your team’s database)
 
-
 What to submit:
 
 1. A Completed Report, the contents of which will be provided in due course
@@ -78,7 +58,7 @@ rubric will be provided in due course
 
 ## Configuration
 
-Datasets
+### Datasets
 
 The datasets required for this program were provided by Stainless Steel Company X. The 
 datasets must be included in a folder named Datasets that should be created in the project 
@@ -90,7 +70,7 @@ The datasets must be named exactly as they are named in the program and must con
 same columns and data types/sizes.
 
 
-Configuration File
+### Configuration File
 
 In order to connect to the database you will need to create a file named db.conf. This file
 should contain the following section and information:

@@ -1,4 +1,4 @@
-# DSC200_Final_Project
+# Data Cleaning Project - DSC200
 
 ## Overview
 

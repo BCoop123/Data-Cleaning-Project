@@ -4,7 +4,7 @@
 
 Team membership: Brandon, Nathan, Abhishek
 
-### Project Descriptions
+### Project Description
 
 Company A is a stainless-steel manufacturing company. The company has one plant in north
 America with several production lines that produce stainless steel in many different forms. The project
